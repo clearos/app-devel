@@ -1,5 +1,7 @@
 $(document).ready(function() {
 
+    clearos_dialog_box('error', 'Warning','This is a Javascript warning dialog pop-up.');
+
     // Dialog Box
     //-----------    
 
