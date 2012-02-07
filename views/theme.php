@@ -75,6 +75,7 @@ echo field_dropdown('city', $cities, 'Toronto', 'City');
 echo field_input('postal_code', '', 'Postal Code');
 echo field_toggle_enable_disable('notify1', 1, 'Email Notify', FALSE);
 echo field_toggle_enable_disable('notify2', 1, 'SMS Notify', FALSE);
+echo field_input('some_long_text', 'Some really long text that goes outside the width of the form.', 'Notes', TRUE);
 echo fieldset_footer();
 
 echo fieldset_header('Phone Numbers');
