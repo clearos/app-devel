@@ -1,15 +1,15 @@
 <?php
 
 /**
- * Developer controller.
+ * Theme developer controller.
  *
  * @category   Apps
- * @package    Developer
+ * @package    Devel
  * @subpackage Controllers
  * @author     ClearFoundation <developer@clearfoundation.com>
- * @copyright  2012 ClearFoundation
+ * @copyright  2010-2011 ClearFoundation
  * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
- * @link       http://www.clearfoundation.com/docs/developer/apps/developer/
+ * @link       http://www.clearfoundation.com/docs/developer/apps/devel/
  */
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -34,37 +34,42 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Developer controller.
+ * Theme developer controller.
  *
  * @category   Apps
- * @package    Developer
+ * @package    Devel
  * @subpackage Controllers
  * @author     ClearFoundation <developer@clearfoundation.com>
- * @copyright  2012 ClearFoundation
+ * @copyright  2010-2011 ClearFoundation
  * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
- * @link       http://www.clearfoundation.com/docs/developer/apps/developer/
+ * @link       http://www.clearfoundation.com/docs/developer/apps/devel/
  */
 
-class Devel extends ClearOS_Controller
+class Theme extends ClearOS_Controller
 {
     /**
-     * Devel summary view.
+     * Theme default controller
      *
-     * @return view
+     * @return string
      */
 
     function index()
     {
-        // Load libraries
-        //---------------
-
         $this->lang->load('devel');
+        $this->page->view_form('theme', $data, lang('devel_theme_viewer'));
+    }
 
-        // Load views
-        //-----------
+    /**
+     * JSON encoded progress bar information
+     *
+     * @return string JSON encoded information
+     */
 
-        $views = array('devel/wizard', 'devel/theme');
+    function progress_data()
+    {
+        $info['progress'] = strftime("%S") * 100 / 60;
+        $info['progress_standalone'] = 100 - $info['progress'];
 
-        $this->page->view_forms($views, lang('devel_app_name'));
+        echo json_encode($info);
     }
 }

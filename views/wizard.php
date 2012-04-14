@@ -1,15 +1,15 @@
 <?php
 
 /**
- * Developer controller.
+ * Dashboard view.
  *
- * @category   Apps
- * @package    Developer
- * @subpackage Controllers
+ * @category   ClearOS
+ * @package    Base
+ * @subpackage Views
  * @author     ClearFoundation <developer@clearfoundation.com>
- * @copyright  2012 ClearFoundation
+ * @copyright  2011 ClearFoundation
  * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
- * @link       http://www.clearfoundation.com/docs/developer/apps/developer/
+ * @link       http://www.clearfoundation.com/docs/developer/apps/base/
  */
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -25,46 +25,28 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.  
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
-// C L A S S
+// Load dependencies
 ///////////////////////////////////////////////////////////////////////////////
 
-/**
- * Developer controller.
- *
- * @category   Apps
- * @package    Developer
- * @subpackage Controllers
- * @author     ClearFoundation <developer@clearfoundation.com>
- * @copyright  2012 ClearFoundation
- * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
- * @link       http://www.clearfoundation.com/docs/developer/apps/developer/
- */
+$this->lang->load('base');
 
-class Devel extends ClearOS_Controller
-{
-    /**
-     * Devel summary view.
-     *
-     * @return view
-     */
+///////////////////////////////////////////////////////////////////////////////
+// Form 
+///////////////////////////////////////////////////////////////////////////////
 
-    function index()
-    {
-        // Load libraries
-        //---------------
+echo form_open('dashboard/shutdown');
+echo form_header(lang('base_wizard'));
 
-        $this->lang->load('devel');
+echo field_button_set(
+    array(
+        anchor_custom($wizard_anchor, $wizard_text)
+    )
+);
 
-        // Load views
-        //-----------
-
-        $views = array('devel/wizard', 'devel/theme');
-
-        $this->page->view_forms($views, lang('devel_app_name'));
-    }
-}
+echo form_footer();
+echo form_close();

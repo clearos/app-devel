@@ -1,15 +1,15 @@
 <?php
 
 /**
- * Developer controller.
+ * Developer widge controller.
  *
  * @category   Apps
- * @package    Developer
+ * @package    Dashboard
  * @subpackage Controllers
  * @author     ClearFoundation <developer@clearfoundation.com>
  * @copyright  2012 ClearFoundation
  * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
- * @link       http://www.clearfoundation.com/docs/developer/apps/developer/
+ * @link       http://www.clearfoundation.com/docs/developer/apps/dashboard/
  */
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -34,37 +34,35 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Developer controller.
+ * Developer widge controller.
  *
  * @category   Apps
- * @package    Developer
+ * @package    Dashboard
  * @subpackage Controllers
  * @author     ClearFoundation <developer@clearfoundation.com>
  * @copyright  2012 ClearFoundation
  * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
- * @link       http://www.clearfoundation.com/docs/developer/apps/developer/
+ * @link       http://www.clearfoundation.com/docs/developer/apps/dashboard/
  */
 
-class Devel extends ClearOS_Controller
+class Wizard extends ClearOS_Controller
 {
     /**
-     * Devel summary view.
+     * Developer widget default controller.
      *
      * @return view
      */
 
     function index()
     {
-        // Load libraries
-        //---------------
+        if ($this->session->userdata('wizard')) {
+            $data['wizard_anchor'] = '/app/base/wizard/stop';
+            $data['wizard_text'] = 'Stop Wizard Test';
+        } else {
+            $data['wizard_anchor'] = '/app/base/wizard/start';
+            $data['wizard_text'] = 'Start Wizard Test';
+        }
 
-        $this->lang->load('devel');
-
-        // Load views
-        //-----------
-
-        $views = array('devel/wizard', 'devel/theme');
-
-        $this->page->view_forms($views, lang('devel_app_name'));
+        $this->page->view_form('wizard', $data, lang('base_wizard'));
     }
 }

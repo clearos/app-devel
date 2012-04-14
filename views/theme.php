@@ -344,6 +344,7 @@ echo "
 ";
 
 echo anchor_dialog('dialog_box_anchor', 'Click Here to Open a Dialog');
+echo anchor_dialog('warning_dialog_box_anchor', 'Click Here to Open a Warning');
 
 // Note...the DOM id of the message box must follow the id of the anchor_button + "_message"
 echo "
