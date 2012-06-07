@@ -56,6 +56,18 @@ class Theme extends ClearOS_Controller
     function index()
     {
         $this->lang->load('devel');
+        $this->page->view_form('theme_intro', $data, lang('devel_theme_viewer'));
+    }
+
+    /**
+     * Theme default controller
+     *
+     * @return string
+     */
+
+    function view()
+    {
+        $this->lang->load('devel');
         $this->page->view_form('theme', $data, lang('devel_theme_viewer'));
     }
 

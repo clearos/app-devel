@@ -1,15 +1,15 @@
 <?php
 
 /**
- * Developer widge controller.
+ * Developer widget controller.
  *
  * @category   Apps
- * @package    Dashboard
+ * @package    Devel
  * @subpackage Controllers
  * @author     ClearFoundation <developer@clearfoundation.com>
  * @copyright  2012 ClearFoundation
  * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
- * @link       http://www.clearfoundation.com/docs/developer/apps/dashboard/
+ * @link       http://www.clearfoundation.com/docs/developer/apps/devel/
  */
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -34,15 +34,15 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Developer widge controller.
+ * Developer widget controller.
  *
  * @category   Apps
- * @package    Dashboard
+ * @package    Devel
  * @subpackage Controllers
  * @author     ClearFoundation <developer@clearfoundation.com>
  * @copyright  2012 ClearFoundation
  * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
- * @link       http://www.clearfoundation.com/docs/developer/apps/dashboard/
+ * @link       http://www.clearfoundation.com/docs/developer/apps/devel/
  */
 
 class Wizard extends ClearOS_Controller

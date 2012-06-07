@@ -4,12 +4,12 @@
  * Developer controller.
  *
  * @category   Apps
- * @package    Developer
+ * @package    Devel
  * @subpackage Controllers
  * @author     ClearFoundation <developer@clearfoundation.com>
  * @copyright  2012 ClearFoundation
  * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
- * @link       http://www.clearfoundation.com/docs/developer/apps/developer/
+ * @link       http://www.clearfoundation.com/docs/developer/apps/devel/
  */
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -37,12 +37,12 @@
  * Developer controller.
  *
  * @category   Apps
- * @package    Developer
+ * @package    Devel
  * @subpackage Controllers
  * @author     ClearFoundation <developer@clearfoundation.com>
  * @copyright  2012 ClearFoundation
  * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
- * @link       http://www.clearfoundation.com/docs/developer/apps/developer/
+ * @link       http://www.clearfoundation.com/docs/developer/apps/devel/
  */
 
 class Devel extends ClearOS_Controller
@@ -63,7 +63,8 @@ class Devel extends ClearOS_Controller
         // Load views
         //-----------
 
-        $views = array('devel/wizard', 'devel/theme');
+        $views = array('devel/theme', 'devel/wizard');
+        // $views = array('devel/translations', 'devel/theme', 'devel/wizard');
 
         $this->page->view_forms($views, lang('devel_app_name'));
     }

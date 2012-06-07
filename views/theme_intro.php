@@ -1,13 +1,13 @@
 <?php
 
 /**
- * Wizard demo view.
+ * Theme intro view.
  *
  * @category   ClearOS
  * @package    Devel
  * @subpackage Views
  * @author     ClearFoundation <developer@clearfoundation.com>
- * @copyright  2011-2012 ClearFoundation
+ * @copyright  2012 ClearFoundation
  * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
  * @link       http://www.clearfoundation.com/docs/developer/apps/devel/
  */
@@ -40,6 +40,6 @@ $this->lang->load('devel');
 ///////////////////////////////////////////////////////////////////////////////
 
 echo infobox_highlight(
-    lang('devel_install_wizard'),
-    lang('devel_install_wizard_help') . " &nbsp; " . anchor_custom($wizard_anchor, $wizard_text)
+    lang('devel_theme_viewer'),
+    lang('devel_theme_viewer_help') . " &nbsp; " . anchor_custom('/app/devel/theme/view', lang('devel_view_theme'))
 );

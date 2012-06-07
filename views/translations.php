@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Wizard demo view.
+ * Translations view.
  *
  * @category   ClearOS
  * @package    Devel
@@ -40,6 +40,7 @@ $this->lang->load('devel');
 ///////////////////////////////////////////////////////////////////////////////
 
 echo infobox_highlight(
-    lang('devel_install_wizard'),
-    lang('devel_install_wizard_help') . " &nbsp; " . anchor_custom($wizard_anchor, $wizard_text)
+    lang('devel_translations'),
+    lang('devel_translations_help') .
+    "<p align='center'>" . anchor_custom($wizard_anchor, $wizard_text) . "</p>"
 );

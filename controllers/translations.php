@@ -1,13 +1,13 @@
 <?php
 
 /**
- * Wizard demo view.
+ * Translations controller.
  *
- * @category   ClearOS
+ * @category   Apps
  * @package    Devel
- * @subpackage Views
+ * @subpackage Controllers
  * @author     ClearFoundation <developer@clearfoundation.com>
- * @copyright  2011-2012 ClearFoundation
+ * @copyright  2012 ClearFoundation
  * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
  * @link       http://www.clearfoundation.com/docs/developer/apps/devel/
  */
@@ -25,21 +25,44 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.  
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
-// Load dependencies
+// C L A S S
 ///////////////////////////////////////////////////////////////////////////////
 
-$this->lang->load('devel');
+/**
+ * Translations controller.
+ *
+ * @category   Apps
+ * @package    Devel
+ * @subpackage Controllers
+ * @author     ClearFoundation <developer@clearfoundation.com>
+ * @copyright  2012 ClearFoundation
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
+ * @link       http://www.clearfoundation.com/docs/developer/apps/devel/
+ */
 
-///////////////////////////////////////////////////////////////////////////////
-// Form 
-///////////////////////////////////////////////////////////////////////////////
+class Translations extends ClearOS_Controller
+{
+    /**
+     * Developer widget default controller.
+     *
+     * @return view
+     */
 
-echo infobox_highlight(
-    lang('devel_install_wizard'),
-    lang('devel_install_wizard_help') . " &nbsp; " . anchor_custom($wizard_anchor, $wizard_text)
-);
+    function index()
+    {
+        if ($this->session->userdata('wizard')) {
+            $data['wizard_anchor'] = '/app/base/wizard/stop';
+            $data['wizard_text'] = 'Stop Wizard Test';
+        } else {
+            $data['wizard_anchor'] = '/app/base/wizard/start';
+            $data['wizard_text'] = 'Start Wizard Test';
+        }
+
+        $this->page->view_form('translations', $data, lang('base_wizard'));
+    }
+}
