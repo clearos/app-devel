@@ -213,7 +213,7 @@ echo "
 ";
 echo summary_table(
     'Local DNS Server',
-    array(anchor_add('/app/devel')),
+    array(anchor_add('/app/devel'), anchor_cancel('/app/devel')),
     array('Hostname', 'IP'),
     $wee_items
 );
@@ -224,11 +224,21 @@ echo "
 ";
 echo summary_table(
     'Local DNS Server',
-    array(anchor_add('/app/devel')),
+    array(anchor_add('/app/devel'), form_submit_update('submit')),
     array('Hostname', 'IP'),
     $items
 );
 
+echo "
+<h3>List Table</h3>
+<p>For a list of items that has checkbox toggle.</p>
+";
+echo list_table(
+    'Members ',
+    array(anchor_cancel('/app/theme'), form_submit_update('submit')),
+    array('Hostname', 'IP'),
+    $items
+);
 ///////////////////////////////////////////////////////////////////////////////
 // Radio and Checkboxes
 ///////////////////////////////////////////////////////////////////////////////
