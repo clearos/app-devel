@@ -229,6 +229,19 @@ echo summary_table(
     $items
 );
 
+$options['no_action'] = TRUE;
+
+echo "
+<h3>Large List (no action set to TRUE)</h3>
+<p>For a large list of items, pagination and search features are recommended.</p>
+";
+echo summary_table(
+    'Local DNS Server',
+    array(anchor_add('/app/devel'), form_submit_update('submit')),
+    array('Hostname', 'IP'),
+    $items,
+    $options
+);
 echo "
 <h3>List Table</h3>
 <p>For a list of items that has checkbox toggle.</p>
