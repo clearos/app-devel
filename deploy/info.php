@@ -5,7 +5,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 $app['basename'] = 'devel';
-$app['version'] = '5.9.9.5';
+$app['version'] = '1.2.0';
 $app['release'] = '1';
 $app['vendor'] = 'ClearFoundation';
 $app['packager'] = 'ClearFoundation';
@@ -19,4 +19,21 @@ $app['description'] = lang('devel_app_description');
 
 $app['name'] = lang('devel_app_name');
 $app['category'] = lang('base_category_system');
-$app['subcategory'] = 'Developer';
+$app['subcategory'] = 'Developer'; // FIXME
+
+////////////////////////////////////////////////////////////////////////////
+// Controllers
+/////////////////////////////////////////////////////////////////////////////
+
+$app['controllers']['devel']['title'] = $app['name'];
+$app['controllers']['theme']['title'] = lang('devel_theme');
+$app['controllers']['wizard']['title'] = lang('devel_wizard');
+$app['controllers']['translations']['title'] = lang('devel_translations');
+
+/////////////////////////////////////////////////////////////////////////////
+// Packaging
+/////////////////////////////////////////////////////////////////////////////
+
+$app['core_requires'] = array(
+    'app-language-core',
+);

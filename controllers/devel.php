@@ -63,8 +63,7 @@ class Devel extends ClearOS_Controller
         // Load views
         //-----------
 
-        $views = array('devel/theme', 'devel/wizard');
-        // $views = array('devel/translations', 'devel/theme', 'devel/wizard');
+        $views = array('devel/translations', 'devel/theme', 'devel/wizard');
 
         $this->page->view_forms($views, lang('devel_app_name'));
     }

@@ -48,21 +48,92 @@
 class Translations extends ClearOS_Controller
 {
     /**
-     * Developer widget default controller.
+     * Translations widget default controller.
      *
      * @return view
      */
 
     function index()
     {
-        if ($this->session->userdata('wizard')) {
-            $data['wizard_anchor'] = '/app/base/wizard/stop';
-            $data['wizard_text'] = 'Stop Wizard Test';
-        } else {
-            $data['wizard_anchor'] = '/app/base/wizard/start';
-            $data['wizard_text'] = 'Start Wizard Test';
+        $this->view();
+    }
+
+    /**
+     * Language edit view.
+     *
+     * @return view
+     */
+
+    function edit()
+    {
+        $this->_view_edit('edit');
+    }
+
+    /**
+     * Language view view.
+     *
+     * @return view
+     */
+
+    function view()
+    {
+        $this->_view_edit('view');
+    }
+
+    /**
+     * Language view/edit common controller
+     *
+     * @param string $form_type form type
+     *
+     * @return view
+     */
+
+    function _view_edit($form_type)
+    {
+        // Load dependencies
+        //------------------
+
+        $this->load->library('language/Locale');
+        $this->lang->load('language');
+
+        // Set validation rules
+        //---------------------
+         
+        $this->form_validation->set_policy('code', 'language/Locale', 'validate_language_code', TRUE);
+        $form_ok = $this->form_validation->run();
+
+        // Handle form submit
+        //-------------------
+
+        if (($this->input->post('submit') && $form_ok)) {
+            try {
+                $this->locale->set_locale($this->input->post('code'));
+                $this->login_session->set_language($this->input->post('code'));
+
+                $this->page->set_status_updated();
+                redirect('/devel/translations');
+            } catch (Exception $e) {
+                $this->page->view_exception($e);
+                return;
+            }
         }
 
-        $this->page->view_form('translations', $data, lang('base_wizard'));
+        // Load view data
+        //---------------
+
+        try {
+            $data['form_type'] = $form_type;
+
+            $data['code'] = $this->locale->get_language_code();
+            $data['languages'] = $this->locale->get_languages();
+        } catch (Exception $e) {
+            $this->page->view_exception($e);
+            return;
+        }
+
+        // Load views
+        //-----------
+
+        $this->page->view_form('translations', $data, lang('devel_translations'));
     }
 }

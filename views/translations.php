@@ -7,7 +7,7 @@
  * @package    Devel
  * @subpackage Views
  * @author     ClearFoundation <developer@clearfoundation.com>
- * @copyright  2011-2012 ClearFoundation
+ * @copyright  2012 ClearFoundation
  * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
  * @link       http://www.clearfoundation.com/docs/developer/apps/devel/
  */
@@ -33,14 +33,38 @@
 // Load dependencies
 ///////////////////////////////////////////////////////////////////////////////
 
-$this->lang->load('devel');
+$this->lang->load('base');
+$this->lang->load('language');
 
 ///////////////////////////////////////////////////////////////////////////////
-// Form 
+// Form handler
 ///////////////////////////////////////////////////////////////////////////////
 
-echo infobox_highlight(
-    lang('devel_translations'),
-    lang('devel_translations_help') .
-    "<p align='center'>" . anchor_custom($wizard_anchor, $wizard_text) . "</p>"
-);
+// Sort by value instead of language code.
+asort($languages);
+
+if ($form_type === 'edit') {
+    $read_only = FALSE;
+    $buttons = array(
+        form_submit_update('submit'),
+        anchor_cancel('/app/devel/translations')
+    );
+} else {
+    $read_only = TRUE;
+    $buttons = array(
+        anchor_edit('/app/devel/translations/edit')
+    );
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Form
+///////////////////////////////////////////////////////////////////////////////
+
+echo form_open('devel/translations');
+echo form_header("Translations");
+
+echo field_dropdown('code', $languages, $code, lang('language_default_system_language'), $read_only);
+echo field_button_set($buttons);
+
+echo form_footer();
+echo form_close();

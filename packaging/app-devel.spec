@@ -1,28 +1,28 @@
 
 Name: app-devel
-Group: ClearOS/Apps
-Version: 5.9.9.5
+Epoch: 1
+Version: 1.2.0
 Release: 1%{dist}
-Summary: Translation missing (devel_app_name)
+Summary: Developer Tools
 License: GPLv3
-Packager: ClearFoundation
-Vendor: ClearFoundation
+Group: ClearOS/Apps
 Source: %{name}-%{version}.tar.gz
 Buildarch: noarch
-Requires: %{name}-core = %{version}-%{release}
+Requires: %{name}-core = 1:%{version}-%{release}
 Requires: app-base
 
 %description
-Translation missing (devel_app_description)
+This page provides a quick developer overview of the theme and other widgets.
 
 %package core
-Summary: Translation missing (devel_app_name) - APIs and install
-Group: ClearOS/Libraries
+Summary: Developer Tools - Core
 License: LGPLv3
+Group: ClearOS/Libraries
 Requires: app-base-core
+Requires: app-language-core
 
 %description core
-Translation missing (devel_app_description)
+This page provides a quick developer overview of the theme and other widgets.
 
 This package provides the core API and libraries.
 
