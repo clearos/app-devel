@@ -29,41 +29,29 @@ $(document).ready(function() {
     // Progress Bar Demo
     //------------------
 
-    getData();
-
-    function getData() {
-        $.ajax({
-            url: '/app/devel/progress_data',
-            method: 'GET',
-            dataType: 'json',
-            success : function(json) {
-                showData(json);
-                window.setTimeout(getData, 1000);
-            },
-            error: function (XMLHttpRequest, textStatus, errorThrown) {
-                $("#status").html('Ooops: ' + textStatus);
-                window.setTimeout(getData, 1000);
-            }
-        });
-    }
-
-    function showData(info) {
-        $("#bacon_progress").animate_progressbar(info.progress);
-        $("#bacon_progress_standalone").animate_progressbar(info.progress);
-//        $("#bacon_progress").progressbar({
- //           value: Math.round(info.progress)
-  //      });
-
-       // $("#bacon_progress_standalone").progressbar({
-        //    value: Math.round(info.progress_standalone)
-        //});
-    }
-
-	// Tabs
-    //-----
-
-	// $('#tabs').tabs();
-
+    if ($('#bacon_progress_standalone').length != 0)
+        getData();
 });
+
+function getData() {
+    $.ajax({
+        url: '/app/devel/theme/progress_data',
+        method: 'GET',
+        dataType: 'json',
+        success : function(json) {
+            showData(json);
+            window.setTimeout(getData, 1000);
+        },
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+            $("#status").html('Ooops: ' + textStatus);
+            window.setTimeout(getData, 1000);
+        }
+    });
+}
+
+function showData(info) {
+    $("#bacon_progress").animate_progressbar(info.progress);
+    $("#bacon_progress_standalone").animate_progressbar(info.progress);
+}
 
 // vim: ts=4 syntax=javascript
