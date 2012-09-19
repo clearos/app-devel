@@ -93,13 +93,15 @@ class Translations extends ClearOS_Controller
         // Load dependencies
         //------------------
 
-        $this->load->library('language/Locale');
         $this->lang->load('language');
+        $this->load->library('language/Locale');
+        $this->load->library('devel/Translations');
 
         // Set validation rules
         //---------------------
          
         $this->form_validation->set_policy('code', 'language/Locale', 'validate_language_code', TRUE);
+        $this->form_validation->set_policy('sync', 'devel/Translations', 'validate_sync_state', TRUE);
         $form_ok = $this->form_validation->run();
 
         // Handle form submit
@@ -109,6 +111,7 @@ class Translations extends ClearOS_Controller
             try {
                 $this->locale->set_locale($this->input->post('code'));
                 $this->login_session->set_language($this->input->post('code'));
+                $this->translations->set_sync_state($this->input->post('sync'));
 
                 $this->page->set_status_updated();
                 redirect('/devel/translations');
@@ -124,6 +127,7 @@ class Translations extends ClearOS_Controller
         try {
             $data['form_type'] = $form_type;
 
+            $data['sync'] = $this->translations->get_sync_state();
             $data['code'] = $this->locale->get_language_code();
             $data['languages'] = $this->locale->get_languages();
         } catch (Exception $e) {

@@ -1,7 +1,7 @@
 
 Name: app-devel
 Epoch: 1
-Version: 1.2.0
+Version: 1.2.8
 Release: 1%{dist}
 Summary: Developer Tools
 License: GPLv3
@@ -19,7 +19,11 @@ Summary: Developer Tools - Core
 License: LGPLv3
 Group: ClearOS/Libraries
 Requires: app-base-core
+Requires: app-base-core >= 1:1.2.8
 Requires: app-language-core
+Requires: bc
+Requires: clearos-framework >= 6.3.2
+Requires: rsync
 
 %description core
 This page provides a quick developer overview of the theme and other widgets.
@@ -34,6 +38,7 @@ This package provides the core API and libraries.
 mkdir -p -m 755 %{buildroot}/usr/clearos/apps/devel
 cp -r * %{buildroot}/usr/clearos/apps/devel/
 
+install -D -m 0755 packaging/get_translations %{buildroot}/usr/sbin/get_translations
 
 %post
 logger -p local6.notice -t installer 'app-devel - installing'
@@ -76,3 +81,4 @@ exit 0
 /usr/clearos/apps/devel/deploy
 /usr/clearos/apps/devel/language
 /usr/clearos/apps/devel/libraries
+/usr/sbin/get_translations

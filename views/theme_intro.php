@@ -41,5 +41,6 @@ $this->lang->load('devel');
 
 echo infobox_highlight(
     lang('devel_theme_viewer'),
-    lang('devel_theme_viewer_help') . " &nbsp; " . anchor_custom('/app/devel/theme/view', lang('devel_view_theme'))
+    lang('devel_theme_viewer_help') . " &nbsp; " . 
+    anchor_custom('/app/devel/theme/view', lang('devel_view_theme'))
 );

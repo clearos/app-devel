@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# Bail if target directory disappears
+[ -d /var/clearos/base/translations ] || exit 1
+
+# Run rysnc
+RSYNC_COMMAND="rsync translate.clearcenter.com::translations/clearos_apps/svn/ /var/clearos/base/translations/"
+if [ "$1" == "-q" ]; then
+    $RSYNC_COMMAND -rl >/dev/null 2>&1
+else
+    $RSYNC_COMMAND -rltv
+fi
+
+# Remove cron if it is more than 12 hours old (43200 seconds)
+CRON_TIME=` stat --format %Y /etc/cron.d/app-devel-translations`
+NOW=`date '+%s'`
+DIFF=`echo "$NOW - $CRON_TIME" | bc`
+
+if [ $DIFF -gt 43200 ]; then
+    logger -p local6.notice -t app-devel "disabling translation synchronization"
+    rm -f /etc/cron.d/app-devel-translations
+    rm -rf /var/clearos/base/translations/base
+fi

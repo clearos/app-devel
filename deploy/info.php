@@ -5,7 +5,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 $app['basename'] = 'devel';
-$app['version'] = '1.2.0';
+$app['version'] = '1.2.8';
 $app['release'] = '1';
 $app['vendor'] = 'ClearFoundation';
 $app['packager'] = 'ClearFoundation';
@@ -26,8 +26,8 @@ $app['subcategory'] = 'Developer'; // FIXME
 /////////////////////////////////////////////////////////////////////////////
 
 $app['controllers']['devel']['title'] = $app['name'];
-$app['controllers']['theme']['title'] = lang('devel_theme');
-$app['controllers']['wizard']['title'] = lang('devel_wizard');
+$app['controllers']['theme']['title'] = lang('devel_theme_viewer');
+$app['controllers']['wizard']['title'] = lang('base_wizard');
 $app['controllers']['translations']['title'] = lang('devel_translations');
 
 /////////////////////////////////////////////////////////////////////////////
@@ -35,5 +35,16 @@ $app['controllers']['translations']['title'] = lang('devel_translations');
 /////////////////////////////////////////////////////////////////////////////
 
 $app['core_requires'] = array(
+    'app-base-core >= 1:1.2.8',
     'app-language-core',
+    'bc',
+    'clearos-framework >= 6.3.2',
+    'rsync',
 );
+
+$app['core_file_manifest'] = array(
+    'get_translations'=> array('target' => '/usr/sbin/get_translations',
+        'mode' => '0755',
+    ),
+);
+

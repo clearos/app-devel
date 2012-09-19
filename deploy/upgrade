@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Sudoers
+#--------
+
+/usr/sbin/addsudo /usr/sbin/get_translations app-devel-core
+
