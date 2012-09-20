@@ -6,9 +6,9 @@
 # Run rysnc
 RSYNC_COMMAND="rsync translate.clearcenter.com::translations/clearos_apps/svn/ /var/clearos/base/translations/"
 if [ "$1" == "-q" ]; then
-    $RSYNC_COMMAND -rl >/dev/null 2>&1
+    $RSYNC_COMMAND -rltp >/dev/null 2>&1
 else
-    $RSYNC_COMMAND -rltv
+    $RSYNC_COMMAND -rltpv
 fi
 
 # Remove cron if it is more than 12 hours old (43200 seconds)
