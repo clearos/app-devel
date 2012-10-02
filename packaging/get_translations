@@ -12,6 +12,8 @@ else
 fi
 
 # Remove cron if it is more than 12 hours old (43200 seconds)
+[ ! -d /etc/cron.d/app-devel-translations ] && exit 0
+
 CRON_TIME=` stat --format %Y /etc/cron.d/app-devel-translations`
 NOW=`date '+%s'`
 DIFF=`echo "$NOW - $CRON_TIME" | bc`
