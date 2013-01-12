@@ -56,11 +56,13 @@ clearos_load_language('devel');
 //--------
 
 use \clearos\apps\base\Engine as Engine;
+use \clearos\apps\base\File as File;
 use \clearos\apps\base\Folder as Folder;
 use \clearos\apps\base\Shell as Shell;
 use \clearos\apps\tasks\Cron as Cron;
 
 clearos_load_library('base/Engine');
+clearos_load_library('base/File');
 clearos_load_library('base/Folder');
 clearos_load_library('base/Shell');
 clearos_load_library('tasks/Cron');
@@ -95,6 +97,7 @@ class Translations extends Engine
     ///////////////////////////////////////////////////////////////////////////////
 
     const FILE_CROND = 'app-devel-translations';
+    const FILE_MODE = '/etc/clearos/devel.d/translator_mode';
     const FOLDER_BASE_TRANSLATIONS = '/var/clearos/base/translations/base';
     const DEFAULT_CRONTAB_TIME = '*/5 * * * *';
     const COMMAND_GET_TRANSLATIONS = '/usr/sbin/get_translations';
@@ -132,6 +135,25 @@ class Translations extends Engine
     }
 
     /**
+     * Returns translation mode state.
+     *
+     * @return boolean state of translation mode
+     * @throws Engine_Exception
+     */
+
+    public function get_translation_mode_state()
+    {
+        clearos_profile(__METHOD__, __LINE__);
+
+        $file = new File(self::FILE_MODE);
+
+        if ($file->exists())
+            return TRUE;
+        else
+            return FALSE;
+    }
+
+    /**
      * Sets synchronization state.
      *
      * @param boolean $state state
@@ -144,7 +166,7 @@ class Translations extends Engine
     {
         clearos_profile(__METHOD__, __LINE__);
 
-        Validation_Exception::is_valid($this->validate_sync_state($state));
+        Validation_Exception::is_valid($this->validate_state($state));
 
         $cron = new Cron();
 
@@ -166,23 +188,46 @@ class Translations extends Engine
         }
     }
 
+    /**
+     * Sets translation mode state.
+     *
+     * @param boolean $state state of translation mode
+     *
+     * @return void
+     * @throws Engine_Exception
+     */
+
+    public function set_translation_mode_state($state)
+    {
+        clearos_profile(__METHOD__, __LINE__);
+
+        Validation_Exception::is_valid($this->validate_state($state));
+
+        $file = new File(self::FILE_MODE);
+
+        if (!$state && $file->exists())
+            $file->delete();
+        else if ($state && !$file->exists())
+            $file->create('root', 'root', '0644');
+    }
+
     ///////////////////////////////////////////////////////////////////////////////
     // V A L I D A T I O N   R O U T I N E S
     ///////////////////////////////////////////////////////////////////////////////
 
     /**
-     * Validation routine for synchronization state.
+     * Validation routine for state.
      *
      * @param boolean $state state
      *
-     * @return string error message if synchronization state is invalid
+     * @return string error message if state is invalid
      */
 
-    public function validate_sync_state($state)
+    public function validate_state($state)
     {
         clearos_profile(__METHOD__, __LINE__);
 
         if (!clearos_is_valid_boolean($state))
-            return lang('devel_synchronization_state_invalid');
+            return lang('base_validate_state_invalid');
     }
 }

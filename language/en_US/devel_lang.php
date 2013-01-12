@@ -7,6 +7,7 @@ $lang['devel_install_wizard_help'] = 'Click on the following link to start the i
 $lang['devel_theme_viewer'] = 'Theme Viewer';
 $lang['devel_theme_viewer_help'] = 'Click on the following link to review the theme.';
 $lang['devel_translations'] = 'Translations';
+$lang['devel_translation_mode'] = 'Translation Mode';
 $lang['devel_view_theme'] = 'View Theme';
 $lang['devel_synchronize_updates'] = 'Synchronize Updates';
 $lang['devel_synchronization_state_invalid'] = 'Synchronization state is invalid.';

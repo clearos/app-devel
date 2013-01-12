@@ -1,7 +1,7 @@
 
 Name: app-devel
 Epoch: 1
-Version: 1.2.9
+Version: 1.4.14
 Release: 1%{dist}
 Summary: Developer Tools
 License: GPLv3
@@ -22,7 +22,7 @@ Requires: app-base-core
 Requires: app-base-core >= 1:1.2.8
 Requires: app-language-core
 Requires: bc
-Requires: clearos-framework >= 6.3.2
+Requires: clearos-framework >= 6.4.15
 Requires: rsync
 
 %description core
@@ -38,6 +38,7 @@ This package provides the core API and libraries.
 mkdir -p -m 755 %{buildroot}/usr/clearos/apps/devel
 cp -r * %{buildroot}/usr/clearos/apps/devel/
 
+install -d -m 0755 %{buildroot}/etc/clearos/devel.d
 install -D -m 0755 packaging/get_translations %{buildroot}/usr/sbin/get_translations
 
 %post
@@ -78,6 +79,7 @@ exit 0
 %exclude /usr/clearos/apps/devel/packaging
 %exclude /usr/clearos/apps/devel/tests
 %dir /usr/clearos/apps/devel
+%dir /etc/clearos/devel.d
 /usr/clearos/apps/devel/deploy
 /usr/clearos/apps/devel/language
 /usr/clearos/apps/devel/libraries
