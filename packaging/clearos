@@ -1,0 +1,1325 @@
+#!/usr/clearos/sandbox/usr/bin/php
+<?php
+
+/**
+ * ClearOS developer tools.
+ *
+ * @category   Framework
+ * @package    Developer
+ * @author     ClearFoundation <developer@clearfoundation.com>
+ * @copyright  2011 ClearFoundation
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
+ * @link       http://www.clearfoundation.com/docs/developer/framework/
+ */
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// B O O T S T R A P
+///////////////////////////////////////////////////////////////////////////////
+
+$bootstrap = getenv('CLEAROS_BOOTSTRAP') ? getenv('CLEAROS_BOOTSTRAP') : '/usr/clearos/framework/shared';
+require_once $bootstrap . '/bootstrap.php';
+
+///////////////////////////////////////////////////////////////////////////////
+// D E P E N D E N C I E S
+///////////////////////////////////////////////////////////////////////////////
+
+use \clearos\framework\Config as Config;
+
+///////////////////////////////////////////////////////////////////////////////
+// M A I N
+///////////////////////////////////////////////////////////////////////////////
+
+// Help output
+//------------
+
+$actions = array(
+    'deps' => 'Provides a library dependency list',
+    'lint' => 'PHP coding standards checker',
+    'local' => 'Builds an RPM on the local system',
+    'newapp' => 'Creates the basic structure of an app',
+    'setup' => 'Preps a development environment',
+    'spec' => 'Generates the RPM spec file for an app',
+);
+
+$help_output  = '
+Usage: clearos [options] <action>
+
+Actions
+-------
+
+';
+
+foreach ($actions as $action => $description)
+    $help_output .= "$action -- $description\n";
+
+$help_output .= "\n";
+
+//--------------------------------------------------------------------
+// Handle action and dispatch
+//--------------------------------------------------------------------
+
+$legacy_action = isset($argv[1]) ? $argv[1] : '';
+$legacy_param = isset($argv[2]) ? $argv[2] : '';
+
+$action = (array_pop($argv));
+
+if ($action === 'usage') {
+    echo $help_output;
+} else if ($action === 'deps') {
+    deps();
+} else if ($action === 'lint') {
+    lint();
+} else if ($action === 'local') {
+    local();
+} else if ($action === 'newapp') {
+    newapp();
+} else if ($action === 'setup') {
+    setup();
+} else if ($action === 'spec') {
+    spec();
+} else if ($legacy_action === 'deps') {
+    deps($legacy_param);
+} else {
+    echo $help_output;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// F U N C T I O N S
+///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * ClearOS App dependency list.
+ *
+ * The following format was used in the old days and we'll still support it
+ * clearos spec <filename>
+ *
+ * @category  Framework
+ * @package   Builder
+ * @author    ClearFoundation <developer@clearfoundation.com>
+ * @copyright 2011 ClearFoundation
+ * @license   http://www.gnu.org/copyleft/lgpl.html GNU General Public License version 3 or later
+ * @link      http://www.clearfoundation.com/docs/developer/framework/
+ */
+
+function deps($filename = NULL)
+{
+    global $argv;
+
+    // Options and help
+    //-----------------
+
+    $short_options = '';
+    $short_options .= 'f:'; // Filename
+    $short_options .= 'h';  // Help
+
+    $help_options  = "Options:\n";
+    $help_options .= "  -f: Filename\n";
+    $help_options .= "  -h: Help\n";
+
+    $options = getopt($short_options);
+
+    $help = isset($options['h']) ? TRUE : FALSE;
+
+    if (empty($filename))
+        $filename = isset($options['f']) ? $options['f'] : '';
+
+    if ($help) {
+        echo $help_options;
+        return;
+    }
+
+    // Process options
+    //----------------
+
+    while (! preg_match('/[a-z0-9_]+/', $filename)) {
+        echo 'filename: ';
+        $filename = trim(fgets(STDIN));
+    }
+
+    $base_dir = getcwd();
+
+    $app = preg_replace('/.*\/apps\//', '', $base_dir);
+    $app = preg_replace('/\/.*/', '', $app);
+
+    $source_file = $base_dir . '/' . $filename;
+
+    $source_namespace = preg_replace('/.*\/apps\//', '', $base_dir);
+    $source_namespace = preg_replace('/\/.*/', '', $source_namespace);
+
+    // Create an array that maps classes to app names
+    //
+    // $class_mapping:
+    //  [Folder] => base
+    //  [File] => base
+    //-----------------------------------------------
+
+    $class_mapping = array();
+    $factory_mapping = array();
+
+    foreach (Config::$apps_paths as $path) {
+        $path = (preg_match('/apps$/', $path)) ? $path : $path . '/apps'; // FIXME: temporary workaround for old version
+        echo "loading $path...\n";
+
+        exec("find $path -type f -name '*.php' | grep -v tags | grep '/libraries/' ", $output);
+
+        foreach ($output as $file) {
+            if (preg_match('/libraries/', $file)) {
+                $matches = array();
+                preg_match('/(.*)\/(.*).php/', $file, $matches);
+                $class = $matches[2];
+
+                $app_path = preg_replace('/.*\/apps\//', '', $matches[1]);
+                $app_path = preg_replace('/\/.*/', '', $app_path);
+
+                if (preg_match('/_Factory$/', $class)) {
+                    $factory_class = preg_replace('/_Factory$/', '', $class);
+                    $factory_mapping[$factory_class] = $app_path;
+                }
+
+                // For conflicting classes, prefer the source namespace over exernal namespaces
+                if (isset($class_mapping[$class]) && ($app_path !== $source_namespace))
+                    continue;
+
+                $class_mapping[$class] = $app_path;
+            }
+        }
+    }
+
+    // Open target file and look for dependencies
+    //-------------------------------------------
+
+    $detected_classes = array();
+    $root_exception = FALSE;
+
+    $raw_contents = file_get_contents($source_file);
+
+    $contents = explode("\n", $raw_contents);
+
+    foreach ($contents as $line) {
+        $matches = array();
+
+        // Ignore comments
+        if (preg_match('/\s*\/\//', $line)) {
+            // echo test
+
+        // Ignore ClearOS_Controller
+        } else if (preg_match('/extends.*ClearOS_Controller/', $line)) {
+            // echo test
+
+        // Ignore Zend
+        } else if (preg_match('/\\\Zend/', $line)) {
+            // echo test
+
+        // throw new xyz_Exception
+        } else if (preg_match('/\s+throw new\s+([^\(]*)/', $line, $matches)) {
+            $detected_classes[] = $matches[1];
+
+        // $example = new Example();
+        } else if (preg_match('/\s*=\s*new\s+([^\(]*)/', $line, $matches)) {
+            $detected_classes[] = $matches[1];
+
+        // OpenVPN extends Daemon
+        } else if (preg_match('/\s+extends\s+(.*)/', $line, $matches)) {
+            $detected_classes[] = $matches[1];
+
+        // } catch (Some_Exception $e) {
+        } else if (preg_match('/\s*catch\s*\(([^\s+]*)/', $line, $matches)) {
+            // Handle base 'Exception' that is part of PHP
+            if ($matches[1] === 'Exception')
+                $root_exception = TRUE;
+            else
+                $detected_classes[] = $matches[1];
+	    }
+
+        if (preg_match('/\s*([a-zA-Z0-9_]*)::\w+/', $line, $matches)) {
+            // Ignore parent::xyz and self::xyz
+            if (($matches[1] !== 'parent') && ($matches[1] !== 'self'))
+                $detected_classes[] = $matches[1];
+        }
+    }
+
+    // Massage the classes into different categories
+    //----------------------------------------------
+
+    $detected_classes = array_unique($detected_classes);
+    sort($detected_classes);
+
+    $normal_use = array();
+    $normal_load = array();
+    $factory_use = array();
+    $factory_load = array();
+    $exception_use = array();
+    $exception_load = array();
+
+    foreach ($detected_classes as $class) {
+        if (isset($factory_mapping[$class])) {
+            $namespace = $factory_mapping[$class];
+            $use = "use \\clearos\\apps\\$namespace\\${class}_Factory as $class;";
+            $load = "clearos_load_library('$namespace/${class}_Factory');";
+            $is_factory = TRUE;
+        } else {
+            $namespace = $class_mapping[$class];
+            $use = "use \\clearos\\apps\\$namespace\\$class as $class;";
+            $load = "clearos_load_library('$namespace/$class');";
+            $is_factory = FALSE;
+        }
+
+        if ($is_factory) {
+            $factory_use[] = $use;
+            $factory_load[] = $load;
+        } else if (preg_match('/_Exception/', $class)) {
+            $exception_use[] = $use;
+            $exception_load[] = $load;
+        } else {
+            $normal_use[] = $use;
+            $normal_load[] = $load;
+        }
+    }
+
+    sort($factory_use);
+    sort($factory_load);
+    sort($normal_use);
+    sort($normal_load);
+    sort($exception_use);
+    sort($exception_load);
+
+    $factory_use_output = implode("\n", $factory_use);
+    $factory_load_output = implode("\n", $factory_load);
+    $normal_use_output = implode("\n", $normal_use);
+    $normal_load_output = implode("\n", $normal_load);
+    $exception_use_output = implode("\n", $exception_use);
+    $exception_load_output = implode("\n", $exception_load);
+
+    // Add special \Exception
+    if ($root_exception)
+	$exception_use_output = "use \Exception as Exception;\n" . $exception_use_output;
+
+echo "
+///////////////////////////////////////////////////////////////////////////////
+// D E P E N D E N C I E S
+///////////////////////////////////////////////////////////////////////////////
+";
+
+if (! empty($factory_use_output)) {
+    echo "
+// Factories
+//----------
+
+$factory_use_output
+
+$factory_load_output
+";
+}
+
+if (! empty($normal_use_output)) {
+    echo "
+// Classes
+//--------
+
+$normal_use_output
+
+$normal_load_output
+";
+}
+
+if (! empty($exception_use_output)) {
+    echo "
+// Exceptions
+//-----------
+
+$exception_use_output
+
+$exception_load_output
+";
+}
+
+}
+
+/**
+ * ClearOS App lint check.
+ *
+ * @category  Framework
+ * @package   Builder
+ * @author    ClearFoundation <developer@clearfoundation.com>
+ * @copyright 2011 ClearFoundation
+ * @license   http://www.gnu.org/copyleft/lgpl.html GNU General Public License version 3 or later
+ * @link      http://www.clearfoundation.com/docs/developer/framework/
+ */
+
+function lint()
+{
+    global $argv;
+
+    $PHPCS = '/usr/bin/phpcs';
+    $PHPCS_STANDARD = '/usr/share/clearos/devel/code_sniffer/ClearOS';
+
+    $base_dir = getcwd();
+    $file_list = '';
+
+    if (isset($argv[2])) {
+        if (! file_exists($base_dir . '/' . $argv[2])) {
+            echo "Source file not found.\n";
+            exit(1);
+        }
+
+        $file_list = $argv[2];
+    } else {
+        if ($dh = opendir($base_dir)) {
+            while (($file = readdir($dh)) !== FALSE) {
+                if (preg_match('/\.php$/', $file))
+                    $file_list .= ' ' . $file;
+            }
+            closedir($dh);
+        }
+    }
+
+    if (! empty($file_list)) {
+        echo "Checking:$file_list\n";
+        system("$PHPCS --standard=$PHPCS_STANDARD $file_list");
+    } else {
+        echo "What file did you want to check?\n";
+        exit(1);
+    }
+}
+
+/**
+ * ClearOS App local package builder.
+ *
+ * @category  Framework
+ * @package   Builder
+ * @author    ClearFoundation <developer@clearfoundation.com>
+ * @copyright 2011 ClearFoundation
+ * @license   http://www.gnu.org/copyleft/lgpl.html GNU General Public License version 3 or later
+ * @link      http://www.clearfoundation.com/docs/developer/framework/
+ */
+
+function local()
+{
+    $app = _load_metadata();
+
+    $temp_dir = '/var/tmp';
+    $rpm_sources = '~/rpmbuild/SOURCES';
+
+    $package_name = 'app-' . preg_replace('/_/', '-', $app['basename']);
+    $package_source_name = $package_name . '-' . $app['version'];
+    $source_tar_temp = $temp_dir . '/' . $package_source_name;
+    $source_code = getcwd();
+    $spec_file = 'packaging/' . $package_name . '.spec';
+
+    // Sorry for the execs -- this was originally a shell script
+    //----------------------------------------------------------
+
+    if (is_dir($source_tar_temp))
+        system('rm -rf ' . $source_tar_temp);
+
+    mkdir($source_tar_temp);
+    system("cp -a $source_code/* $source_tar_temp/");
+    system("find $source_tar_temp -type d -name '.svn' -exec rm -rf '{}' \; 2>/dev/null");
+    system("cd $temp_dir; tar -czf $package_source_name.tar.gz $package_source_name");
+    system("mv $temp_dir/$package_source_name.tar.gz $rpm_sources/");
+    system("rpmbuild -ba $spec_file", $retval); 
+
+    system('rm -rf ' . $source_tar_temp);
+
+    if ($retval !== 0)
+        exit(1);
+}
+
+/**
+ * ClearOS App local package builder.
+ *
+ * @category  Framework
+ * @package   Builder
+ * @author    ClearFoundation <developer@clearfoundation.com>
+ * @copyright 2011 ClearFoundation
+ * @license   http://www.gnu.org/copyleft/lgpl.html GNU General Public License version 3 or later
+ * @link      http://www.clearfoundation.com/docs/developer/framework/
+ */
+
+function newapp()
+{
+    // Options and help
+    //-----------------
+
+    $short_options = '';
+    $short_options .= 'b:'; // Basename
+    $short_options .= 'f:'; // Full name
+    $short_options .= 't:'; // Type
+    $short_options .= 'h';  // Help
+
+    $help_options  = "Options:\n";
+    $help_options .= "  -b: Basename (e.g. proxy_report)\n";
+    $help_options .= "  -f: Full name (e.g. Proxy Report)\n";
+    $help_options .= "  -t: Type - svn or git\n";
+    $help_options .= "  -h: Help\n";
+
+    $options = getopt($short_options);
+
+    $help = isset($options['h']) ? TRUE : FALSE;
+    $type = isset($options['t']) ? $options['t'] : '';
+    $basename = isset($options['b']) ? $options['b'] : '';
+    $fullname = isset($options['f']) ? $options['f'] : '';
+
+    if ($help) {
+        echo $help_options;
+        return;
+    }
+
+    // Process options
+    //----------------
+
+    while (! preg_match('/[a-z0-9_]+/', $basename)) {
+        echo 'basename (e.g. proxy_report): ';
+        $basename = trim(fgets(STDIN));
+    }
+
+    while (! preg_match('/[a-zA-Z0-9_ ]+/', $fullname)) {
+        echo 'fullname (e.g. Proxy Report): ';
+        $fullname = trim(fgets(STDIN));
+    }
+
+    while (($type !== 'git') && ($type != 'svn')) {
+        echo 'type (git or svn): ';
+        $type = trim(fgets(STDIN));
+    }
+
+    // Create directory structure
+    //---------------------------
+
+    echo "Creating new app $basename ($type)\n";
+    mkdir($basename);
+
+    $svn_dirs = array('trunk', 'tags', 'branches');
+    $base_dirs = array('controllers', 'deploy', 'htdocs', 'language', 'libraries', 'packaging', 'tests', 'views');
+
+    if ($type == 'svn') {
+        foreach ($svn_dirs as $dir) {
+            echo "creating directory $basename/$dir\n";
+            mkdir("$basename/$dir");
+        }
+
+        $extra_path = '/trunk';
+    } else {
+        $extra_path = '';
+    }
+
+    foreach ($base_dirs as $dir) {
+        echo "creating directory $basename${extra_path}/$dir\n";
+        mkdir("$basename${extra_path}/$dir");
+    }
+
+    mkdir("$basename${extra_path}/language/en_US");
+
+    $lang_file = "$basename${extra_path}/language/en_US/${basename}_lang.php";
+    $app_info_file = "$basename${extra_path}/deploy/info.php";
+    $controller_file = "$basename${extra_path}/controllers/${basename}.php";
+    $view_file = "$basename${extra_path}/views/${basename}.php";
+
+    $package = preg_replace('/ /', '_', $fullname);
+    $controller_name = ucfirst($basename);
+
+    //-----------------------------------------------------------------------
+    // Create translation file
+    //-----------------------------------------------------------------------
+
+    echo "creating translation file $lang_file\n";
+    $lang_contents = "<?php
+
+\$lang['${basename}_app_name'] = '$fullname';
+\$lang['${basename}_app_description'] = '$fullname - a description goes here.';
+";
+    file_put_contents($lang_file, $lang_contents);
+
+
+    //-----------------------------------------------------------------------
+    // Create default controller
+    //-----------------------------------------------------------------------
+
+    echo "creating default controller $controller_file\n";
+
+    $controller_contents = "<?php
+
+/**
+ * $fullname controller.
+ *
+ * @category   Apps
+ * @package    $package
+ * @subpackage Views
+ * @author     Your name <your@e-mail>
+ * @copyright  2013 Your name / Company
+ * @license    Your license
+ */
+
+///////////////////////////////////////////////////////////////////////////////
+// C L A S S
+///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * $fullname controller.
+ *
+ * @category   Apps
+ * @package    $package
+ * @subpackage Controllers
+ * @author     Your name <your@e-mail>
+ * @copyright  2013 Your name / Company
+ * @license    Your license
+ */
+
+class $controller_name extends ClearOS_Controller
+{
+    /**
+     * $fullname default controller.
+     *
+     * @return view
+     */
+
+    function index()
+    {
+        // Load dependencies
+        //------------------
+
+        \$this->lang->load('${basename}');
+
+        // Load views
+        //-----------
+
+        \$this->page->view_form('$basename', NULL, lang('${basename}_app_name'));
+    }
+}
+";
+    file_put_contents($controller_file, $controller_contents);
+
+
+    //-----------------------------------------------------------------------
+    // Create default view
+    //-----------------------------------------------------------------------
+
+    echo "creating default view $view_file\n";
+
+    $view_contents = "<?php
+
+/**
+ * $fullname controller.
+ *
+ * @category   Apps
+ * @package    $package
+ * @subpackage Controllers
+ * @author     Your name <your@e-mail>
+ * @copyright  2013 Your name / Company
+ * @license    Your license
+ */
+
+///////////////////////////////////////////////////////////////////////////////
+// Load dependencies
+///////////////////////////////////////////////////////////////////////////////
+
+\$this->lang->load('${basename}');
+
+///////////////////////////////////////////////////////////////////////////////
+// Form
+///////////////////////////////////////////////////////////////////////////////
+
+echo infobox_highlight(lang('${basename}_app_name'), '...');
+";
+    file_put_contents($view_file, $view_contents);
+
+
+    //-----------------------------------------------------------------------
+    // Create app info file
+    //-----------------------------------------------------------------------
+
+    echo "creating app info file $app_info_file\n";
+    $app_info_contents = "<?php
+
+/////////////////////////////////////////////////////////////////////////////
+// General information
+/////////////////////////////////////////////////////////////////////////////
+
+\$app['basename'] = '${basename}';
+\$app['version'] = '1.0.0';
+\$app['release'] = '1';
+\$app['vendor'] = 'Vendor'; // e.g. Acme Co
+\$app['packager'] = 'Packager'; // e.g. Gordie Howe
+\$app['license'] = 'MyLicense'; // e.g. 'GPLv3';
+\$app['license_core'] = 'MyLicense'; // e.g. 'LGPLv3';
+\$app['description'] = lang('${basename}_app_description');
+
+/////////////////////////////////////////////////////////////////////////////
+// App name and categories
+/////////////////////////////////////////////////////////////////////////////
+
+\$app['name'] = lang('${basename}_app_name');
+\$app['category'] = lang('base_category_system');
+\$app['subcategory'] = 'Developer'; // e.g. lang('base_subcategory_settings');
+";
+    file_put_contents($app_info_file, $app_info_contents);
+
+
+}
+
+/**
+ * ClearOS development environment setup.
+ *
+ * @category  Framework
+ * @package   Builder
+ * @author    ClearFoundation <developer@clearfoundation.com>
+ * @copyright 2013 ClearFoundation
+ * @license   http://www.gnu.org/copyleft/lgpl.html GNU General Public License version 3 or later
+ * @link      http://www.clearfoundation.com/docs/developer/framework/
+ */
+
+function setup()
+{
+    global $argv;
+
+    // Bail if not superuser
+    //----------------------
+
+    if (posix_getuid() !== 0) {
+        echo "You need to be root to run this command.\n";
+        exit(1);
+    }
+
+    // Options and help
+    //-----------------
+
+    $short_options = '';
+    $short_options .= 'u:'; // Username
+    $short_options .= 'p:'; // Password
+    $short_options .= 'e:'; // Editor
+    $short_options .= 'h';  // Help
+
+    $help_options  = "Options:\n";
+    $help_options .= "  -u: Username\n";
+    $help_options .= "  -p: Password\n";
+    $help_options .= "  -e: Editor (e.g. /usr/bin/vim)\n";
+    $help_options .= "  -h: Help\n";
+
+    $options = getopt($short_options);
+
+    $help = isset($options['h']) ? TRUE : FALSE;
+    $username = isset($options['u']) ? $options['u'] : '';
+    $password = isset($options['p']) ? $options['p'] : '';
+    $editor = isset($options['e']) ? $options['e'] : '';
+
+    if ($help) {
+        echo "usage: " . $argv[0] . " [options] setup\n";
+        echo $help_options;
+        exit(0);
+    }
+
+    // Process options
+    //----------------
+
+    while (! preg_match('/[a-z0-9_]+/', $username)) {
+        echo 'username (e.g. david): ';
+        $username = trim(fgets(STDIN));
+    }
+
+    while (! preg_match('/[a-z0-9_]+/', $password)) {
+        echo 'password: ';
+        $password = trim(fgets(STDIN));
+    }
+
+    while (! preg_match('/[a-z0-9_]+/', $editor)) {
+        echo 'editor (e.g. /usr/bin/vim): ';
+        $editor = trim(fgets(STDIN));
+    }
+
+    // Do setup
+    //---------
+
+    echo "Adding user $username\n";
+    exec("/usr/sbin/useradd $username", $output);
+
+    echo "Setting password for $username\n";
+    exec("echo $password | /usr/bin/passwd --stdin $username", $output);
+
+    echo "Updating home directory permissions\n";
+    chmod("/home/$username", 0755);
+
+    echo "Creating .rpmmacros\n";
+    $rpmmacros = "/home/$username/.rpmmacros";
+    file_put_contents($rpmmacros, "%dist .$username\n");
+    chown($rpmmacros, $username);
+    chgrp($rpmmacros, $username);
+
+    echo "Adding environment variables CLEAROS_BOOTSTRAP, CLEAROS_CONFIG and EDITOR\n";
+    $environment = "\n";
+    $environment .= "CLEAROS_BOOTSTRAP=/home/$username/clearos/webconfig/framework/trunk/shared\n"; 
+    $environment .= "CLEAROS_CONFIG=/home/$username/.clearos\n";
+    $environment .= "export CLEAROS_BOOTSTRAP\n";
+    $environment .= "export CLEAROS_CONFIG\n";
+    $environment .= "\n";
+    $environment .= "EDITOR=$editor\n";
+    $environment .= "export EDITOR\n";
+    file_put_contents("/home/$username/.bash_profile", $environment, FILE_APPEND);
+
+    echo "Adding user to sudoers\n";
+    file_put_contents("/etc/sudoers", "$username ALL=NOPASSWD: CC\n", FILE_APPEND);
+
+    echo "Adding webconfig configlet\n";
+    $configlet_file = "/usr/clearos/sandbox/etc/httpd/conf.d/devel.conf";
+    $configlet = "
+Listen 1501
+
+<VirtualHost _default_:1501>
+        # Document root
+        DocumentRoot /home/$username/clearos/webconfig/framework/trunk/htdocs
+        SetEnv CLEAROS_BOOTSTRAP /home/$username/clearos/webconfig/framework/trunk/shared
+        SetEnv CLEAROS_CONFIG /home/$username/.clearos
+
+        # Enable SSL
+        SSLEngine on
+        SSLProtocol all -SSLv2
+        SSLCipherSuite ALL:!ADH:!EXPORT:!SSLv2:RC4+RSA:+HIGH:+MEDIUM:+LOW
+        SSLCertificateFile /usr/clearos/sandbox/etc/httpd/conf/server.crt
+        SSLCertificateKeyFile /usr/clearos/sandbox/etc/httpd/conf/server.key
+
+        # Rewrites
+        RewriteEngine on
+        RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK)
+        RewriteRule .* - [F]
+        RewriteRule ^/app/(.*)$ /app/index.php/$1 [L]
+
+        # Developer aliases
+        Alias /cache/ /var/clearos/framework/cache/
+        Alias /themes/ /home/$username/clearos/webconfig/themes/
+        Alias /clearos/approot/ /home/$username/clearos/webconfig/apps/
+        Alias /clearcenter/approot/ /home/$username/clearcenter/webconfig/apps/
+
+        # Personal or 3rd party SVN trees
+        # Alias /my_git_account/approot /home/$username/my_git_account/apps
+</VirtualHost>
+";
+    file_put_contents($configlet_file, $configlet);
+    exec('/sbin/service webconfig restart 2>/dev/null', $output);
+}
+
+/**
+ * ClearOS App spec builder.
+ *
+ * @category  Framework
+ * @package   Builder
+ * @author    ClearFoundation <developer@clearfoundation.com>
+ * @copyright 2011 ClearFoundation
+ * @license   http://www.gnu.org/copyleft/lgpl.html GNU General Public License version 3 or later
+ * @link      http://www.clearfoundation.com/docs/developer/framework/
+ */
+
+function spec()
+{
+    // Load app metadata
+    //------------------
+
+    $app = _load_metadata();
+
+    // RPM-ize the values (e.g. change underscores to dashes)
+    //-------------------------------------------------------
+
+    $app['package_name'] = 'app-' . preg_replace('/_/', '-', $app['basename']);
+    $app['name'] = preg_replace('/\.$/', '', $app['name']); // No period: an RPM policy (shrug).
+
+    // Build file manifest
+    //--------------------
+
+    $core_directories_manifest = '';
+    $core_directories_install = '';
+    $core_files_manifest = '';
+    $core_files_install = '';
+    $htdocs_symlinks = '';
+    $services_manifest = '';
+    $services_install = '';
+    $services_init = array();
+
+    if (isset($app['core_file_manifest'])) {
+        ksort($app['core_file_manifest']);
+        foreach ($app['core_file_manifest'] as $file => $details) {
+            if (isset($details['config'])) {
+                if (isset($details['config_params'])) 
+                    $config = '%config(' . $details['config_params'] . ') ';
+                else 
+                    $config = '%config ';
+            } else {        
+                $config = '';
+            }
+
+            $mode = isset($details['mode']) ? $details['mode'] : '0644';
+            $owner = isset($details['owner']) ? $details['owner'] : 'root';
+            $group = isset($details['group']) ? $details['group'] : 'root';
+
+            if (($owner === 'root') && ($group === 'root')) 
+                $attributes = '';
+            else
+                $attributes = "%attr($mode,$owner,$group) ";
+
+            $core_files_manifest .= $attributes . $config . $details['target'] . "\n";
+            $core_files_install .= 'install -D -m ' . $mode . ' packaging/' . $file . ' %{buildroot}' . $details['target'] . "\n";
+        }
+    }
+
+    if (isset($app['core_directory_manifest'])) {
+        ksort($app['core_directory_manifest']);
+        foreach ($app['core_directory_manifest'] as $directory => $details) {
+            $mode = isset($details['mode']) ? $details['mode'] : '0755';
+            $owner = isset($details['owner']) ? $details['owner'] : 'root';
+            $group = isset($details['group']) ? $details['group'] : 'root';
+
+            if (($owner === 'root') && ($group === 'root')) 
+                $attributes = '';
+            else
+                $attributes = "%attr($mode,$owner,$group) ";
+
+            $core_directories_manifest .= '%dir ' . $attributes . $directory . "\n";
+            $core_directories_install .= 'install -d -m ' . $mode . ' %{buildroot}' . $directory . "\n";
+        }
+    }
+
+    if (isset($app['htdocs_symlinks'])) {
+        ksort($app['htdocs_symlinks']);
+        foreach ($app['htdocs_symlinks'] as $target => $symlink) {
+            $htdocs_symlinks .= 'ln -s ' . $target . ' %{buildroot}' . $symlink . "\n";
+        }
+    }
+
+    if (isset($app['services'])) {
+        ksort($app['services']);
+        foreach ($app['services'] as $service => $details) {
+            if (!isset($details['class'])) {
+                echo "Required service argument missing; class\n";
+                exit(1);
+            }
+
+            $mode = '0755';
+            $owner = 'root';
+            $group = 'root';
+            $source = "packaging/$service.init";
+            $target = "/etc/init.d/$service";
+            $attributes = "%attr($mode,$owner,$group) ";
+
+            $services_manifest .= "$attributes$target\n";
+            $services_install .= 'install -D -m ' . $mode . " $source" . ' %{buildroot}' . $target . "\n";
+
+            $services_init[$service] = array(
+                'name' => $details['name'],
+                'description' => $details['description'],
+                'class' => $details['class'],
+            );
+        }
+    }
+
+    // Zend Guard
+    //-----------
+
+    if (file_exists(getcwd() . '/libraries_zendguard')) {
+        $core_zendguard = "\n";
+        $core_zendguard .= 'rm -rf %{buildroot}/usr/clearos/apps/' . $app['basename'] . '/libraries' . "\n";
+        $core_zendguard .= 'mv %{buildroot}/usr/clearos/apps/' . $app['basename'] . '/libraries_zendguard %{buildroot}/usr/clearos/apps/' . $app['basename'] . '/libraries' . "\n";
+        // TODO
+        $core_zendguard = "\n";
+        $core_zendguard .= 'rm -rf %{buildroot}/usr/clearos/apps/' . $app['basename'] . '/libraries_zendguard' . "\n";
+    } else {
+        $core_zendguard = '';
+    } 
+
+    // Provides
+    //---------
+
+    $provides = '';
+    $core_provides = '';
+
+    if (isset($app['provides'])) {
+        foreach ($app['provides'] as $provide)
+            $provides .= "Provides: $provide\n";
+    }
+
+    if (isset($app['core_provides'])) {
+        foreach ($app['core_provides'] as $provide)
+            $core_provides .= "Provides: $provide\n";
+    }
+
+    // Obsoletes
+    //----------
+
+    $obsoletes = '';
+    $core_obsoletes = '';
+
+    if (isset($app['obsoletes'])) {
+        foreach ($app['obsoletes'] as $provide)
+            $obsoletes .= "Obsoletes: $provide\n";
+    }
+
+    if (isset($app['core_obsoletes'])) {
+        foreach ($app['core_obsoletes'] as $provide)
+            $core_obsoletes .= "Obsoletes: $provide\n";
+    }
+
+    // Dependencies
+    //-------------
+
+    $requires = '';
+    $core_requires = '';
+
+    if ($app['basename'] !== 'base') {
+        $requires .= "Requires: app-base\n";
+        $core_requires .= "Requires: app-base-core\n";
+    }
+
+    if (isset($app['requires'])) {
+        foreach ($app['requires'] as $require)
+            $requires .= "Requires: $require\n";
+    }
+
+    if (isset($app['core_requires'])) {
+        foreach ($app['core_requires'] as $require)
+            $core_requires .= "Requires: $require\n";
+    }
+
+    // Packager and Vendor
+    //--------------------
+    // Build system manages these tags
+
+    if (($app['vendor'] == 'ClearCenter') || ($app['vendor'] == 'ClearFoundation'))
+        $vendor = '';
+    else
+	$vendor = "Vendor: {$app['vendor']}\n";
+
+    if (($app['packager'] == 'ClearCenter') || ($app['packager'] == 'ClearFoundation'))
+        $packager = '';
+    else
+	$packager = "Packager: {$app['packager']}\n";
+
+    // Pre-install scripts
+    //--------------------
+
+    if (isset($app['core_preinstall'])) {
+        $core_preinstall = "\n%pre core\n";
+        $core_preinstall .= $app['core_preinstall'];
+    } else {
+        $core_preinstall = '';
+    }
+
+    // Template for both core and base RPMS
+    //-------------------------------------
+    // TODO: merge these two templates
+
+    if (!isset($app['core_only']) || (!$app['core_only'])) {
+
+        $spec = "
+Name: {$app['package_name']}
+Epoch: 1
+Version: {$app['version']}
+Release: {$app['release']}%{dist}
+Summary: {$app['name']}
+License: {$app['license']}
+Group: ClearOS/Apps
+" . $packager . $vendor . 
+"Source: %{name}-%{version}.tar.gz
+Buildarch: noarch
+" . $provides . 
+"Requires: %{name}-core = 1:%{version}-%{release}
+" . $requires . $obsoletes . "
+%description
+{$app['description']}
+
+%package core
+Summary: {$app['name']} - Core
+License: {$app['license_core']}
+Group: ClearOS/Libraries
+" . $core_provides . $core_requires . $core_obsoletes . "
+%description core
+{$app['description']}
+
+This package provides the core API and libraries.
+
+%prep
+%setup -q
+%build
+
+%install
+mkdir -p -m 755 %{buildroot}/usr/clearos/apps/{$app['basename']}
+cp -r * %{buildroot}/usr/clearos/apps/{$app['basename']}/
+
+$core_directories_install$core_files_install$core_zendguard$services_install$htdocs_symlinks$core_preinstall
+%post
+logger -p local6.notice -t installer '{$app['package_name']} - installing'
+
+%post core
+logger -p local6.notice -t installer '{$app['package_name']}-core - installing'
+
+if [ $1 -eq 1 ]; then
+    [ -x /usr/clearos/apps/{$app['basename']}/deploy/install ] && /usr/clearos/apps/{$app['basename']}/deploy/install
+fi
+
+[ -x /usr/clearos/apps/{$app['basename']}/deploy/upgrade ] && /usr/clearos/apps/{$app['basename']}/deploy/upgrade
+
+exit 0
+
+%preun
+if [ $1 -eq 0 ]; then
+    logger -p local6.notice -t installer '{$app['package_name']} - uninstalling'
+fi
+
+%preun core
+if [ $1 -eq 0 ]; then
+    logger -p local6.notice -t installer '{$app['package_name']}-core - uninstalling'
+    [ -x /usr/clearos/apps/{$app['basename']}/deploy/uninstall ] && /usr/clearos/apps/{$app['basename']}/deploy/uninstall
+fi
+
+exit 0
+
+%files
+%defattr(-,root,root)
+/usr/clearos/apps/{$app['basename']}/controllers
+/usr/clearos/apps/{$app['basename']}/htdocs
+/usr/clearos/apps/{$app['basename']}/views
+
+%files core
+%defattr(-,root,root)
+%exclude /usr/clearos/apps/{$app['basename']}/packaging
+%exclude /usr/clearos/apps/{$app['basename']}/tests
+%dir /usr/clearos/apps/{$app['basename']}
+" . $core_directories_manifest . "/usr/clearos/apps/{$app['basename']}/deploy
+/usr/clearos/apps/{$app['basename']}/language
+/usr/clearos/apps/{$app['basename']}/libraries
+$core_files_manifest$services_manifest";
+
+
+// Template for core RPMS
+//-----------------------
+
+} else {
+$spec = "
+Name: {$app['package_name']}
+Epoch: 1
+Version: {$app['version']}
+Release: {$app['release']}%{dist}
+Summary: {$app['name']} - Core
+License: {$app['license_core']}
+Group: ClearOS/Libraries
+" . $packager . $vendor . 
+"Source: {$app['package_name']}-%{version}.tar.gz
+Buildarch: noarch
+
+%description
+{$app['description']}
+
+%package core
+Summary: {$app['name']} - Core
+" . $core_provides . $core_requires . $core_obsoletes . "
+%description core
+{$app['description']}
+
+This package provides the core API and libraries.
+
+%prep
+%setup -q
+%build
+
+%install
+mkdir -p -m 755 %{buildroot}/usr/clearos/apps/{$app['basename']}
+cp -r * %{buildroot}/usr/clearos/apps/{$app['basename']}/
+
+$core_directories_install$core_files_install$core_zendguard$services_install$core_preinstall
+%post core
+logger -p local6.notice -t installer '{$app['package_name']}-core - installing'
+
+if [ $1 -eq 1 ]; then
+    [ -x /usr/clearos/apps/{$app['basename']}/deploy/install ] && /usr/clearos/apps/{$app['basename']}/deploy/install
+fi
+
+[ -x /usr/clearos/apps/{$app['basename']}/deploy/upgrade ] && /usr/clearos/apps/{$app['basename']}/deploy/upgrade
+
+exit 0
+
+%preun core
+if [ $1 -eq 0 ]; then
+    logger -p local6.notice -t installer '{$app['package_name']}-core - uninstalling'
+    [ -x /usr/clearos/apps/{$app['basename']}/deploy/uninstall ] && /usr/clearos/apps/{$app['basename']}/deploy/uninstall
+fi
+
+exit 0
+
+%files core
+%defattr(-,root,root)
+%exclude /usr/clearos/apps/{$app['basename']}/packaging
+%exclude /usr/clearos/apps/{$app['basename']}/tests
+%dir /usr/clearos/apps/{$app['basename']}
+" . $core_directories_manifest . "/usr/clearos/apps/{$app['basename']}/deploy
+/usr/clearos/apps/{$app['basename']}/language
+/usr/clearos/apps/{$app['basename']}/libraries
+$core_files_manifest$services_manifest";
+}
+
+
+    $spec_file = 'packaging/' . $app['package_name'] . '.spec';
+
+    file_put_contents($spec_file, $spec);
+
+    echo "Generated spec file: $spec_file\n";
+
+    // Template for services init.d script
+    //------------------------------------
+
+    foreach ($services_init as $service => $details) {
+
+        $init = "#!/bin/bash
+
+# $service    Start up the {$details['name']} daemon
+#
+# chkconfig: 2345 55 25
+# description: {$details['description']}
+#
+# pidfile: /var/run/webconfig/$service.pid
+
+### BEGIN INIT INFO
+# Provides: $service
+# Required-Start: \$local_fs \$network \$syslog
+# Required-Stop: \$local_fs \$syslog
+# Should-Start: \$syslog
+# Should-Stop: \$network \$syslog
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Start up the {$details['name']} daemon
+# Description: {$details['description']}
+### END INIT INFO
+
+# Source function library.
+. /etc/init.d/functions
+
+RETVAL=0
+prog=\"/usr/sbin/webconfig-service\"
+PID_FILE=/var/run/webconfig/$service.pid
+
+start() {
+    echo -n \"Starting $service: \"
+    daemon --user webconfig \$prog -a {$app['basename']} -s {$details['class']} -p \$PID_FILE
+    RETVAL=\$?
+    if [ \$RETVAL -eq 0 ]; then
+        success
+        touch /var/lock/subsys/$service
+    else
+        failure
+    fi
+    echo
+    return \$RETVAL
+}   
+
+stop() {
+    echo -n \"Shutting down $service: \"
+    killproc -p \$PID_FILE $service
+    RETVAL=$?
+    [ \$RETVAL -eq 0 ] && rm -f /var/lock/subsys/$service
+    echo
+    return \$RETVAL
+}
+
+case \"\$1\" in
+    start)
+        start
+    ;;
+    stop)
+        stop
+    ;;
+    status)
+        status -p \$PID_FILE $service
+    ;;
+    restart)
+        stop
+        start
+    ;;
+    reload)
+        killproc -p \$PID_FILE $service SIGHUP
+        RETVAL=$?
+        echo
+    ;;
+    condrestart)
+        if [ -f /var/lock/subsys/$service ]; then
+            stop
+            start
+            RETVAL=\$?
+        fi
+    ;;
+    condreload)
+        if [ -f /var/lock/subsys/$service ]; then
+            killproc -p \$PID_FILE $service SIGHUP
+            RETVAL=\$?
+            echo
+        fi
+    ;;
+    *)
+    echo \"Usage: $service {start|stop|status|reload|restart|condrestart|condreload}\"
+    exit 1
+    ;;
+esac
+exit \$RETVAL
+";
+        $init_file = 'packaging/' . $service . '.init';
+
+        file_put_contents($init_file, $init);
+
+        echo "Generated init file: $init_file\n";
+    }
+}
+
+/**
+ * Loads ClearOS App meta data.
+ *
+ * @category  Framework
+ * @package   Builder
+ * @author    ClearFoundation <developer@clearfoundation.com>
+ * @copyright 2011 ClearFoundation
+ * @license   http://www.gnu.org/copyleft/lgpl.html GNU General Public License version 3 or later
+ * @link      http://www.clearfoundation.com/docs/developer/framework/
+ */
+
+function _load_metadata()
+{
+    // Look for metadata
+    //------------------
+
+    $metadata = getcwd() . '/deploy/info.php';
+
+    if (!file_exists($metadata)) {
+        echo "Hmmm... I didn't find a deploy/info.php file.\n";
+        exit(1);
+    }
+
+    // Load dependencies
+    // Chicken/egg.  Need to know the basename in order to load translations
+    //----------------------------------------------------------------------
+
+    $basename = getcwd();
+    $basename = preg_replace('/.*\/apps\//', '', $basename);
+    $basename = preg_replace('/.*\/themes\//', '', $basename);
+    $basename = preg_replace('/\/.*/', '', $basename);
+
+    clearos_load_language('base');
+    clearos_load_language($basename);
+
+    include_once $metadata;
+
+    if ($basename != $app['basename']) {
+        echo "Basename " . $app['basename'] . " does not match detected directory " . $basename . "\n";
+        exit(1);
+    }
+
+    return $app;
+}

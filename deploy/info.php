@@ -43,7 +43,12 @@ $app['core_requires'] = array(
 );
 
 $app['core_file_manifest'] = array(
-    'get_translations'=> array('target' => '/usr/sbin/get_translations',
+    'get_translations'=> array(
+        'target' => '/usr/sbin/get_translations',
+        'mode' => '0755',
+    ),
+    'clearos' => array(
+        'target' => '/usr/bin/clearos',
         'mode' => '0755',
     ),
 );

@@ -39,6 +39,7 @@ mkdir -p -m 755 %{buildroot}/usr/clearos/apps/devel
 cp -r * %{buildroot}/usr/clearos/apps/devel/
 
 install -d -m 0755 %{buildroot}/etc/clearos/devel.d
+install -D -m 0755 packaging/clearos %{buildroot}/usr/bin/clearos
 install -D -m 0755 packaging/get_translations %{buildroot}/usr/sbin/get_translations
 
 %post
@@ -83,4 +84,5 @@ exit 0
 /usr/clearos/apps/devel/deploy
 /usr/clearos/apps/devel/language
 /usr/clearos/apps/devel/libraries
+/usr/bin/clearos
 /usr/sbin/get_translations
