@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Remove install wizard requirement
+#----------------------------------
+
+rm -f /var/clearos/base/wizard
