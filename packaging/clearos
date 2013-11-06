@@ -704,17 +704,20 @@ function setup()
     $short_options .= 'u:'; // Username
     $short_options .= 'p:'; // Password
     $short_options .= 'e:'; // Editor
+    $short_options .= 'w';  // Webconfig
     $short_options .= 'h';  // Help
 
     $help_options  = "Options:\n";
     $help_options .= "  -u: Username\n";
     $help_options .= "  -p: Password\n";
     $help_options .= "  -e: Editor (e.g. /usr/bin/vim)\n";
+    $help_options .= "  -w: Create webconfig configlet\n";
     $help_options .= "  -h: Help\n";
 
     $options = getopt($short_options);
 
     $help = isset($options['h']) ? TRUE : FALSE;
+    $webconfig = isset($options['w']) ? TRUE : FALSE;
     $username = isset($options['u']) ? $options['u'] : '';
     $password = isset($options['p']) ? $options['p'] : '';
     $editor = isset($options['e']) ? $options['e'] : '';
@@ -725,6 +728,7 @@ function setup()
         exit(0);
     }
 
+
     // Process options
     //----------------
 
@@ -733,47 +737,20 @@ function setup()
         $username = trim(fgets(STDIN));
     }
 
-    while (! preg_match('/[a-z0-9_]+/', $password)) {
-        echo 'password: ';
-        $password = trim(fgets(STDIN));
+    if (!$webconfig) {
+        while (! preg_match('/[a-z0-9_]+/', $password)) {
+            echo 'password: ';
+            $password = trim(fgets(STDIN));
+        }
+
+        while (! preg_match('/[a-z0-9_]+/', $editor)) {
+            echo 'editor (e.g. /usr/bin/vim): ';
+            $editor = trim(fgets(STDIN));
+        }
     }
 
-    while (! preg_match('/[a-z0-9_]+/', $editor)) {
-        echo 'editor (e.g. /usr/bin/vim): ';
-        $editor = trim(fgets(STDIN));
-    }
-
-    // Do setup
-    //---------
-
-    echo "Adding user $username\n";
-    exec("/usr/sbin/useradd $username", $output);
-
-    echo "Setting password for $username\n";
-    exec("echo $password | /usr/bin/passwd --stdin $username", $output);
-
-    echo "Updating home directory permissions\n";
-    chmod("/home/$username", 0755);
-
-    echo "Creating .rpmmacros\n";
-    $rpmmacros = "/home/$username/.rpmmacros";
-    file_put_contents($rpmmacros, "%dist .$username\n");
-    chown($rpmmacros, $username);
-    chgrp($rpmmacros, $username);
-
-    echo "Adding environment variables CLEAROS_BOOTSTRAP, CLEAROS_CONFIG and EDITOR\n";
-    $environment = "\n";
-    $environment .= "CLEAROS_BOOTSTRAP=/home/$username/clearos/webconfig/framework/trunk/shared\n"; 
-    $environment .= "CLEAROS_CONFIG=/home/$username/.clearos\n";
-    $environment .= "export CLEAROS_BOOTSTRAP\n";
-    $environment .= "export CLEAROS_CONFIG\n";
-    $environment .= "\n";
-    $environment .= "EDITOR=$editor\n";
-    $environment .= "export EDITOR\n";
-    file_put_contents("/home/$username/.bash_profile", $environment, FILE_APPEND);
-
-    echo "Adding user to sudoers\n";
-    file_put_contents("/etc/sudoers", "$username ALL=NOPASSWD: CC\n", FILE_APPEND);
+    // Webconfig
+    //----------
 
     echo "Adding webconfig configlet\n";
     $configlet_file = "/usr/clearos/sandbox/etc/httpd/conf.d/devel.conf";
@@ -781,36 +758,94 @@ function setup()
 Listen 1501
 
 <VirtualHost _default_:1501>
-        # Document root
-        DocumentRoot /home/$username/clearos/webconfig/framework/trunk/htdocs
-        SetEnv CLEAROS_BOOTSTRAP /home/$username/clearos/webconfig/framework/trunk/shared
-        SetEnv CLEAROS_CONFIG /home/$username/.clearos
+    # Document root
+    DocumentRoot /usr/clearos/framework/htdocs
+    SetEnv CLEAROS_CONFIG /home/$username/.clearos
 
-        # Enable SSL
-        SSLEngine on
-        SSLProtocol all -SSLv2
-        SSLCipherSuite ALL:!ADH:!EXPORT:!SSLv2:RC4+RSA:+HIGH:+MEDIUM:+LOW
-        SSLCertificateFile /usr/clearos/sandbox/etc/httpd/conf/server.crt
-        SSLCertificateKeyFile /usr/clearos/sandbox/etc/httpd/conf/server.key
+    # For framework development only
+    # DocumentRoot /home/$username/clearos/webconfig/framework/trunk/htdocs
+    # SetEnv CLEAROS_BOOTSTRAP /home/$username/clearos/webconfig/framework/trunk/shared
 
-        # Rewrites
-        RewriteEngine on
-        RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK)
-        RewriteRule .* - [F]
-        RewriteRule ^/app/(.*)$ /app/index.php/$1 [L]
+    # Enable SSL
+    SSLEngine on
+    SSLProtocol all -SSLv2
+    SSLCipherSuite ALL:!ADH:!EXPORT:!SSLv2:RC4+RSA:+HIGH:+MEDIUM:+LOW
+    SSLCertificateFile /usr/clearos/sandbox/etc/httpd/conf/server.crt
+    SSLCertificateKeyFile /usr/clearos/sandbox/etc/httpd/conf/server.key
 
-        # Developer aliases
-        Alias /cache/ /var/clearos/framework/cache/
-        Alias /themes/ /home/$username/clearos/webconfig/themes/
-        Alias /clearos/approot/ /home/$username/clearos/webconfig/apps/
-        Alias /clearcenter/approot/ /home/$username/clearcenter/webconfig/apps/
+    # Rewrites
+    RewriteEngine on
+    RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK)
+    RewriteRule .* - [F]
+    RewriteRule ^/app/(.*)$ /app/index.php/$1 [L]
 
-        # Personal or 3rd party SVN trees
-        # Alias /my_git_account/approot /home/$username/my_git_account/apps
+    # Aliases
+    Alias /cache/ /var/clearos/framework/cache/
+    Alias /approot/ /usr/clearos/apps/
+    Alias /themes/ /usr/clearos/themes/
+
+    # Old SVN roots (optional)
+    Alias /clearos/themes/ /home/$username/clearos/webconfig/themes/
+    Alias /clearos/approot/ /home/$username/clearos/webconfig/apps/
+    Alias /clearcenter/approot/ /home/$username/clearcenter/webconfig/apps/
+
+    # Personal or 3rd party development trees
+    # Alias /github_username/approot/ /home/$username/github_username/apps/
 </VirtualHost>
 ";
     file_put_contents($configlet_file, $configlet);
     exec('/sbin/service webconfig restart 2>/dev/null', $output);
+
+    if ($webconfig) 
+        return;
+
+    // Add user
+    //---------
+
+    if (!posix_getpwnam($username)) {
+        echo "Adding user $username\n";
+        exec("/usr/sbin/useradd $username", $output);
+
+        echo "Setting password for $username\n";
+        exec("echo $password | /usr/bin/passwd --stdin $username", $output);
+
+        echo "Updating home directory permissions\n";
+        chmod("/home/$username", 0755);
+    }
+
+    // Update rpmmacros
+    //-----------------
+
+    $rpmmacros = "/home/$username/.rpmmacros";
+
+    if (!file_exists($rpmmacros)) {
+        echo "Creating .rpmmacros\n";
+        file_put_contents($rpmmacros, "%dist .$username\n");
+        chown($rpmmacros, $username);
+        chgrp($rpmmacros, $username);
+    }
+
+    // Update environment
+    //-------------------
+
+    $profile = file_get_contents("/home/$username/.bash_profile");
+
+    $environment = "\n";
+    if (! preg_match('/CLEAROS_CONFIG/s', $profile)) {
+        echo "Adding environment variables CLEAROS_BOOTSTRAP, CLEAROS_CONFIG and EDITOR\n";
+        $environment = "\n";
+        $environment .= "CLEAROS_BOOTSTRAP=/home/$username/clearos/webconfig/framework/trunk/shared\n"; 
+        $environment .= "CLEAROS_CONFIG=/home/$username/.clearos\n";
+        $environment .= "export CLEAROS_BOOTSTRAP\n";
+        $environment .= "export CLEAROS_CONFIG\n";
+        $environment .= "\n";
+        $environment .= "EDITOR=$editor\n";
+        $environment .= "export EDITOR\n";
+        file_put_contents("/home/$username/.bash_profile", $environment, FILE_APPEND);
+    }
+
+    echo "Adding user to sudoers\n";
+    file_put_contents("/etc/sudoers", "$username ALL=NOPASSWD: CC\n", FILE_APPEND);
 }
 
 /**
