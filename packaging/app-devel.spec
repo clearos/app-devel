@@ -23,6 +23,7 @@ Requires: app-base-core >= 1:1.2.8
 Requires: app-language-core
 Requires: bc
 Requires: clearos-framework >= 6.4.15
+Requires: php-common
 Requires: rsync
 
 %description core

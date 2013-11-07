@@ -834,10 +834,11 @@ Listen 1501
     if (! preg_match('/CLEAROS_CONFIG/s', $profile)) {
         echo "Adding environment variables CLEAROS_BOOTSTRAP, CLEAROS_CONFIG and EDITOR\n";
         $environment = "\n";
-        $environment .= "CLEAROS_BOOTSTRAP=/home/$username/clearos/webconfig/framework/trunk/shared\n"; 
         $environment .= "CLEAROS_CONFIG=/home/$username/.clearos\n";
-        $environment .= "export CLEAROS_BOOTSTRAP\n";
         $environment .= "export CLEAROS_CONFIG\n";
+        $environment .= "\n";
+        $environment .= "# CLEAROS_BOOTSTRAP=/home/$username/clearos/webconfig/framework/trunk/shared\n"; 
+        $environment .= "# export CLEAROS_BOOTSTRAP\n";
         $environment .= "\n";
         $environment .= "EDITOR=$editor\n";
         $environment .= "export EDITOR\n";
