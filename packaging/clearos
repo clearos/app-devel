@@ -752,13 +752,8 @@ function setup()
 {
     global $argv;
 
-    // Bail if not superuser
-    //----------------------
-
-    if (posix_getuid() !== 0) {
-        echo "You need to be root to run this command.\n";
-        exit(1);
-    }
+    // TODO: The -w / webconfig flag is a hack to update old
+    // devel environments.  Remove on or after 6.6.0 release.
 
     // Options and help
     //-----------------
@@ -791,16 +786,25 @@ function setup()
         exit(0);
     }
 
+    // Bail if not superuser
+    //----------------------
+
+    if (!$webconfig && (posix_getuid() !== 0)) {
+        echo "You need to be root to run this command.\n";
+        exit(1);
+    }
 
     // Process options
     //----------------
 
-    while (! preg_match('/[a-z0-9_]+/', $username)) {
-        echo 'username (e.g. david): ';
-        $username = trim(fgets(STDIN));
-    }
+    if ($webconfig) {
+        $username = getenv('USER');
+    } else {
+        while (! preg_match('/[a-z0-9_]+/', $username)) {
+            echo 'username (e.g. david): ';
+            $username = trim(fgets(STDIN));
+        }
 
-    if (!$webconfig) {
         while (! preg_match('/[a-z0-9_]+/', $password)) {
             echo 'password: ';
             $password = trim(fgets(STDIN));
@@ -851,11 +855,16 @@ Listen 1501
     Alias /clearos/themes/ /home/$username/clearos/webconfig/themes/
 </VirtualHost>
 ";
-    file_put_contents($configlet_file, $configlet);
-    exec('/sbin/service webconfig restart 2>/dev/null', $output);
-
-    if ($webconfig) 
+    if ($webconfig) {
+        file_put_contents('/tmp/develconfiglet.conf', $configlet);
+        exec('/usr/bin/sudo /sbin/service webconfig stop 2>/dev/null', $output);
+        exec("/usr/bin/sudo /bin/mv /tmp/develconfiglet.conf $configlet_file", $output);
+        exec('/usr/bin/sudo /sbin/service webconfig restart 2>/dev/null', $output);
         return;
+    } else {
+        file_put_contents($configlet_file, $configlet);
+        exec('/sbin/service webconfig restart 2>/dev/null', $output);
+    }
 
     // Add user
     //---------
