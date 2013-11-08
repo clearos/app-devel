@@ -5,3 +5,14 @@
 
 /usr/sbin/addsudo /usr/sbin/get_translations app-devel-core
 
+# Time zone in PHP
+#-----------------
+
+[ -e /etc/sysconfig/clock ] && source /etc/sysconfig/clock
+DATE_SET=`grep "^date\.timezone[[:space:]]*" /etc/php.ini 2>/dev/null`
+
+if ( [ -z "$DATE_SET" ] && [ -n "$ZONE" ] ); then
+    ZONE_SED=`echo $ZONE | sed 's/\//\\\\\//g'`
+    logger -p local6.notice -t installer "app-devel-core - updating PHP time zone"
+    sed -i -e "s/^\[Date\][[:space:]]*$/\[Date\]\ndate.timezone = $ZONE_SED/" /etc/php.ini
+fi
