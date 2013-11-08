@@ -54,6 +54,7 @@ $actions = array(
     'lint' => 'PHP coding standards checker',
     'local' => 'Builds an RPM on the local system',
     'newapp' => 'Creates the basic structure of an app',
+    'reload' => 'Reloads a development environment configuration',
     'setup' => 'Preps a development environment',
     'spec' => 'Generates the RPM spec file for an app',
 );
@@ -90,6 +91,8 @@ if ($action === 'usage') {
     local();
 } else if ($action === 'newapp') {
     newapp();
+} else if ($action === 'reload') {
+    reload();
 } else if ($action === 'setup') {
     setup();
 } else if ($action === 'spec') {
@@ -173,7 +176,7 @@ function deps($filename = NULL)
     $class_mapping = array();
     $factory_mapping = array();
 
-    foreach (Config::$apps_paths as $path) {
+    foreach (Config::get_apps_paths() as $path) {
         $path = (preg_match('/apps$/', $path)) ? $path : $path . '/apps'; // FIXME: temporary workaround for old version
         echo "loading $path...\n";
 
@@ -675,6 +678,66 @@ echo infobox_highlight(lang('${basename}_app_name'), '...');
 }
 
 /**
+ * ClearOS development environment reload.
+ *
+ * @category  Framework
+ * @package   Builder
+ * @author    ClearFoundation <developer@clearfoundation.com>
+ * @copyright 2013 ClearFoundation
+ * @license   http://www.gnu.org/copyleft/lgpl.html GNU General Public License version 3 or later
+ * @link      http://www.clearfoundation.com/docs/developer/framework/
+ */
+
+function reload()
+{
+    $mappings = Config::get_app_root_mappings();
+
+    $configlet = '';
+
+    // TODO: Detect ClearOS 7 Apache in a more sane way
+    if (file_exists('/etc/systemd')) {
+        $grant_perms = "  Require all granted";
+        $deny_perms = "  Require all denied";
+    } else {
+        $grant_perms = "  Order Deny,Allow\n  Allow from All";
+        $deny_perms = "  Order Deny,Allow\n  Deny from All";
+    }
+
+    foreach ($mappings as $source => $target) {
+        // Add trailing slash
+        $source_slashed = (preg_match('/\/$/', $source)) ? $source : $source . '/';
+        $target_slashed = (preg_match('/\/$/', $target)) ? $target : $target . '/';
+
+        $configlet .= "
+#---------------------------------------------------
+# Apps in $target
+#---------------------------------------------------
+
+Alias $source_slashed $target_slashed
+
+<Directory $target/*/htdocs>
+$grant_perms
+</Directory>
+
+<Directory $target/*/*/htdocs>
+$grant_perms
+</Directory>
+
+<Directory $target>
+$deny_perms
+</Directory>
+
+";
+    }
+
+    file_put_contents('/tmp/devel-paths.conf', $configlet);
+
+    // FIXME: remove sudo and use API instead
+    system('/usr/bin/sudo /bin/mv /tmp/devel-paths.conf /usr/clearos/sandbox/etc/httpd/conf.d');
+    system('/usr/bin/sudo /sbin/service webconfig restart');
+}
+
+/**
  * ClearOS development environment setup.
  *
  * @category  Framework
@@ -784,13 +847,8 @@ Listen 1501
     Alias /approot/ /usr/clearos/apps/
     Alias /themes/ /usr/clearos/themes/
 
-    # Old SVN roots (optional)
+    # Old SVN roots
     Alias /clearos/themes/ /home/$username/clearos/webconfig/themes/
-    Alias /clearos/approot/ /home/$username/clearos/webconfig/apps/
-    Alias /clearcenter/approot/ /home/$username/clearcenter/webconfig/apps/
-
-    # Personal or 3rd party development trees
-    # Alias /github_username/approot/ /home/$username/github_username/apps/
 </VirtualHost>
 ";
     file_put_contents($configlet_file, $configlet);
@@ -837,13 +895,17 @@ Listen 1501
         $environment .= "CLEAROS_CONFIG=/home/$username/.clearos\n";
         $environment .= "export CLEAROS_CONFIG\n";
         $environment .= "\n";
-        $environment .= "# CLEAROS_BOOTSTRAP=/home/$username/clearos/webconfig/framework/trunk/shared\n"; 
-        $environment .= "# export CLEAROS_BOOTSTRAP\n";
-        $environment .= "\n";
         $environment .= "EDITOR=$editor\n";
         $environment .= "export EDITOR\n";
+        $environment .= "\n";
+        $environment .= "# For framework development only\n";
+        $environment .= "# CLEAROS_BOOTSTRAP=/home/$username/clearos/webconfig/framework/trunk/shared\n"; 
+        $environment .= "# export CLEAROS_BOOTSTRAP\n";
         file_put_contents("/home/$username/.bash_profile", $environment, FILE_APPEND);
     }
+
+    // Sudoers
+    //--------
 
     echo "Adding user to sudoers\n";
     file_put_contents("/etc/sudoers", "$username ALL=NOPASSWD: CC\n", FILE_APPEND);
