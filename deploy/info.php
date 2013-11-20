@@ -5,7 +5,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 $app['basename'] = 'devel';
-$app['version'] = '1.5.12';
+$app['version'] = '1.5.13';
 $app['release'] = '1';
 $app['vendor'] = 'ClearFoundation';
 $app['packager'] = 'ClearFoundation';
@@ -41,6 +41,7 @@ $app['core_requires'] = array(
     'clearos-framework >= 6.5.4',
     'php-common',
     'rsync',
+    'wget',
 );
 
 $app['core_file_manifest'] = array(

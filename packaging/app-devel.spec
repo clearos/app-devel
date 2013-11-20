@@ -1,7 +1,7 @@
 
 Name: app-devel
 Epoch: 1
-Version: 1.5.12
+Version: 1.5.13
 Release: 1%{dist}
 Summary: Developer Tools
 License: GPLv3
@@ -25,6 +25,7 @@ Requires: bc
 Requires: clearos-framework >= 6.5.4
 Requires: php-common
 Requires: rsync
+Requires: wget
 
 %description core
 This page provides a quick developer overview of the theme and other widgets.
@@ -79,7 +80,6 @@ exit 0
 %files core
 %defattr(-,root,root)
 %exclude /usr/clearos/apps/devel/packaging
-%exclude /usr/clearos/apps/devel/tests
 %dir /usr/clearos/apps/devel
 %dir /etc/clearos/devel.d
 /usr/clearos/apps/devel/deploy
