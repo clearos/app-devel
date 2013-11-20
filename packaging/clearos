@@ -415,6 +415,71 @@ function lint()
 
 function local()
 {
+    // TODO: temporary git uptream package builds - koji will deprecate this
+    if (file_exists('sources.download')) {
+        list($md5, $tarball, $url) = preg_split('/\s+/', file_get_contents('sources.download'));
+        $source_dir = getenv('HOME') . '/rpmbuild/SOURCES';
+        $source = $source_dir . '/' . $tarball;
+
+
+        if (empty($md5) || empty($tarball) || empty($url)) {
+            echo "Please check the format of sources.download\n";
+            exit(1);
+        }
+
+        $download = TRUE;
+
+        if (file_exists($source)) {
+            $md5_check = md5_file($source);
+
+            if ($md5_check == $md5) {
+                echo "Upstream source exists - $source\n";
+                $download = FALSE;
+            } else {
+                echo "Source exists, but does not match md5... will re-download.\n";
+            }
+        }
+
+        if ($download) {
+            echo "Getting $url ...\n";
+            system("wget -O $source $url");
+
+            $md5_check = md5_file($source);
+
+            if ($md5_check != $md5) {
+                echo "MD5 check failed\n";
+                echo "MD5 in sources file: $md5\n";
+                echo "MD5 of download file: $md5_check\n";
+                exit(1);
+            }
+        }
+
+        echo "Starting build...\n";
+        system('sleep 3');
+
+        $spec_file = '';
+        $manifest = scandir('.');
+
+        foreach ($manifest as $filename) {
+            if (preg_match('/^\./', $filename) || ($filename === 'sources') || ($filename === 'sources.download'))
+                continue;
+
+            if (preg_match('/\.spec$/', $filename))
+                $spec_file = $filename;
+
+            system("cp -av \"$filename\" \"$source_dir\"\n");
+        }
+
+        if (empty($spec_file)) {
+            echo "Spec file is missing!\n";
+        } else {
+            system("rpmbuild -ba $spec_file", $retval); 
+        }
+
+        return;
+    }
+    // TODO: end
+
     $app = _load_metadata();
 
     $temp_dir = '/var/tmp';
@@ -435,7 +500,7 @@ function local()
     mkdir($source_tar_temp);
     system("cp -a $source_code/* $source_tar_temp/");
     system("find $source_tar_temp -type d -name '.svn' -exec rm -rf '{}' \; 2>/dev/null");
-    system("cd $temp_dir; tar -czf $package_source_name.tar.gz $package_source_name");
+    system("cd $temp_dir; tar --exclude=README.md -czf $package_source_name.tar.gz $package_source_name");
     system("mv $temp_dir/$package_source_name.tar.gz $rpm_sources/");
     system("rpmbuild -ba $spec_file", $retval); 
 
@@ -510,7 +575,7 @@ function newapp()
     mkdir($basename);
 
     $svn_dirs = array('trunk', 'tags', 'branches');
-    $base_dirs = array('controllers', 'deploy', 'htdocs', 'language', 'libraries', 'packaging', 'tests', 'views');
+    $base_dirs = array('controllers', 'deploy', 'htdocs', 'language', 'libraries', 'packaging', 'views');
 
     if ($type == 'svn') {
         foreach ($svn_dirs as $dir) {
@@ -1201,7 +1266,6 @@ exit 0
 %files core
 %defattr(-,root,root)
 %exclude /usr/clearos/apps/{$app['basename']}/packaging
-%exclude /usr/clearos/apps/{$app['basename']}/tests
 %dir /usr/clearos/apps/{$app['basename']}
 " . $core_directories_manifest . "/usr/clearos/apps/{$app['basename']}/deploy
 /usr/clearos/apps/{$app['basename']}/language
@@ -1267,7 +1331,6 @@ exit 0
 %files core
 %defattr(-,root,root)
 %exclude /usr/clearos/apps/{$app['basename']}/packaging
-%exclude /usr/clearos/apps/{$app['basename']}/tests
 %dir /usr/clearos/apps/{$app['basename']}
 " . $core_directories_manifest . "/usr/clearos/apps/{$app['basename']}/deploy
 /usr/clearos/apps/{$app['basename']}/language
@@ -1405,7 +1468,7 @@ function _load_metadata()
     $metadata = getcwd() . '/deploy/info.php';
 
     if (!file_exists($metadata)) {
-        echo "Hmmm... I didn't find a deploy/info.php file.\n";
+        echo "Hmmm... Are you in the base directory?  Are any files missing?\n";
         exit(1);
     }
 
