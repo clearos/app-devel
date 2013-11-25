@@ -415,12 +415,16 @@ function lint()
 
 function local()
 {
+    $rpm_sources = '~/rpmbuild/SOURCES';
+
+    if (! file_exists($rpm_sources))
+        system("mkdir -p $rpm_sources");
+
     // TODO: temporary git uptream package builds - koji will deprecate this
     if (file_exists('sources.download')) {
         list($md5, $tarball, $url) = preg_split('/\s+/', file_get_contents('sources.download'));
         $source_dir = getenv('HOME') . '/rpmbuild/SOURCES';
         $source = $source_dir . '/' . $tarball;
-
 
         if (empty($md5) || empty($tarball) || empty($url)) {
             echo "Please check the format of sources.download\n";
@@ -483,7 +487,6 @@ function local()
     $app = _load_metadata();
 
     $temp_dir = '/var/tmp';
-    $rpm_sources = '~/rpmbuild/SOURCES';
 
     $package_name = 'app-' . preg_replace('/_/', '-', $app['basename']);
     $package_source_name = $package_name . '-' . $app['version'];
