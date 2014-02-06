@@ -1271,8 +1271,7 @@ exit 0
 
 %files
 %defattr(-,root,root)
-$include_htdocs$include_views$include_controllers
-
+$include_controllers$include_htdocs$include_views
 %files core
 %defattr(-,root,root)
 %exclude /usr/clearos/apps/{$app['basename']}/packaging
