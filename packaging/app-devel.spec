@@ -1,7 +1,7 @@
 
 Name: app-devel
 Epoch: 1
-Version: 1.5.15
+Version: 1.5.20
 Release: 1%{dist}
 Summary: Developer Tools
 License: GPLv3
@@ -73,9 +73,10 @@ exit 0
 
 %files
 %defattr(-,root,root)
-/usr/clearos/apps/devel/controllers
 /usr/clearos/apps/devel/htdocs
 /usr/clearos/apps/devel/views
+/usr/clearos/apps/devel/controllers
+
 
 %files core
 %defattr(-,root,root)

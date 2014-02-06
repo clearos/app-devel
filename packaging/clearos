@@ -1191,6 +1191,15 @@ function spec()
         $core_preinstall = '';
     }
 
+    // File manifest
+    //--------------
+
+    $include_controllers = (file_exists('controllers')) ? "/usr/clearos/apps/{$app['basename']}/controllers\n" : '';
+    $include_libraries = (file_exists('libraries')) ? "/usr/clearos/apps/{$app['basename']}/libraries\n" : '';
+    $include_tests = (file_exists('tests')) ? "/usr/clearos/apps/{$app['basename']}/tests\n" : '';
+    $include_views = (file_exists('views')) ? "/usr/clearos/apps/{$app['basename']}/views\n" : '';
+    $include_htdocs = (file_exists('htdocs')) ? "/usr/clearos/apps/{$app['basename']}/htdocs\n" : '';
+
     // Template for both core and base RPMS
     //-------------------------------------
     // TODO: merge these two templates
@@ -1262,9 +1271,7 @@ exit 0
 
 %files
 %defattr(-,root,root)
-/usr/clearos/apps/{$app['basename']}/controllers
-/usr/clearos/apps/{$app['basename']}/htdocs
-/usr/clearos/apps/{$app['basename']}/views
+$include_htdocs$include_views$include_controllers
 
 %files core
 %defattr(-,root,root)
@@ -1272,8 +1279,7 @@ exit 0
 %dir /usr/clearos/apps/{$app['basename']}
 " . $core_directories_manifest . "/usr/clearos/apps/{$app['basename']}/deploy
 /usr/clearos/apps/{$app['basename']}/language
-/usr/clearos/apps/{$app['basename']}/libraries
-$core_files_manifest$services_manifest";
+$include_libraries$include_tests$core_files_manifest$services_manifest";
 
 
 // Template for core RPMS
@@ -1337,8 +1343,7 @@ exit 0
 %dir /usr/clearos/apps/{$app['basename']}
 " . $core_directories_manifest . "/usr/clearos/apps/{$app['basename']}/deploy
 /usr/clearos/apps/{$app['basename']}/language
-/usr/clearos/apps/{$app['basename']}/libraries
-$core_files_manifest$services_manifest";
+$include_libraries$include_tests$core_files_manifest$services_manifest";
 }
 
 
@@ -1482,7 +1487,12 @@ function _load_metadata()
     $basename = getcwd();
     $basename = preg_replace('/.*\/apps\//', '', $basename);
     $basename = preg_replace('/.*\/themes\//', '', $basename);
-    $basename = preg_replace('/\/.*/', '', $basename);
+    $basename = preg_replace('/\/trunk/', '', $basename);
+    $basename = preg_replace('/.*\//', '', $basename);
+
+    // Git basename might be app-xyz style
+    $basename = preg_replace('/^app-/', '', $basename);
+    $basename = preg_replace('/-/', '_', $basename);
 
     clearos_load_language('base');
     clearos_load_language($basename);
