@@ -503,7 +503,7 @@ function local()
     mkdir($source_tar_temp);
     system("cp -a $source_code/* $source_tar_temp/");
     system("find $source_tar_temp -type d -name '.svn' -exec rm -rf '{}' \; 2>/dev/null");
-    system("cd $temp_dir; tar --exclude=README.md -czf $package_source_name.tar.gz $package_source_name");
+    system("cd $temp_dir; tar -czf $package_source_name.tar.gz $package_source_name");
     system("mv $temp_dir/$package_source_name.tar.gz $rpm_sources/");
     system("rpmbuild -ba $spec_file", $retval); 
 
@@ -1200,6 +1200,17 @@ function spec()
     $include_views = (file_exists('views')) ? "/usr/clearos/apps/{$app['basename']}/views\n" : '';
     $include_htdocs = (file_exists('htdocs')) ? "/usr/clearos/apps/{$app['basename']}/htdocs\n" : '';
 
+    // Docs
+    //-----
+
+    if (file_exists(getcwd() . '/README.md')) {
+        $include_docs = "%doc README.md\n";
+        $move_docs = "rm -f %{buildroot}/usr/clearos/apps/{$app['basename']}/README.md";
+    } else {
+        $include_docs = '';
+        $move_docs = '';
+    }
+
     // Template for both core and base RPMS
     //-------------------------------------
     // TODO: merge these two templates
@@ -1240,7 +1251,7 @@ This package provides the core API and libraries.
 %install
 mkdir -p -m 755 %{buildroot}/usr/clearos/apps/{$app['basename']}
 cp -r * %{buildroot}/usr/clearos/apps/{$app['basename']}/
-
+$move_docs
 $core_directories_install$core_files_install$core_zendguard$services_install$htdocs_symlinks$core_preinstall
 %post
 logger -p local6.notice -t installer '{$app['package_name']} - installing'
@@ -1274,7 +1285,7 @@ exit 0
 $include_controllers$include_htdocs$include_views
 %files core
 %defattr(-,root,root)
-%exclude /usr/clearos/apps/{$app['basename']}/packaging
+$include_docs%exclude /usr/clearos/apps/{$app['basename']}/packaging
 %dir /usr/clearos/apps/{$app['basename']}
 " . $core_directories_manifest . "/usr/clearos/apps/{$app['basename']}/deploy
 /usr/clearos/apps/{$app['basename']}/language
@@ -1315,7 +1326,7 @@ This package provides the core API and libraries.
 %install
 mkdir -p -m 755 %{buildroot}/usr/clearos/apps/{$app['basename']}
 cp -r * %{buildroot}/usr/clearos/apps/{$app['basename']}/
-
+$move_docs
 $core_directories_install$core_files_install$core_zendguard$services_install$core_preinstall
 %post core
 logger -p local6.notice -t installer '{$app['package_name']}-core - installing'
@@ -1338,7 +1349,7 @@ exit 0
 
 %files core
 %defattr(-,root,root)
-%exclude /usr/clearos/apps/{$app['basename']}/packaging
+$include_docs%exclude /usr/clearos/apps/{$app['basename']}/packaging
 %dir /usr/clearos/apps/{$app['basename']}
 " . $core_directories_manifest . "/usr/clearos/apps/{$app['basename']}/deploy
 /usr/clearos/apps/{$app['basename']}/language
