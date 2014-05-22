@@ -4,7 +4,7 @@
 [ -d /var/clearos/base/translations ] || exit 1
 
 # Run rysnc
-RSYNC_COMMAND="rsync translate.clearcenter.com::translations/clearos_apps/svn/ /var/clearos/base/translations/"
+RSYNC_COMMAND="rsync translate.clearfoundation.com::translations/clearos_apps/svn/ /var/clearos/base/translations/"
 if [ "$1" == "-q" ]; then
     $RSYNC_COMMAND -rltp >/dev/null 2>&1
 else
