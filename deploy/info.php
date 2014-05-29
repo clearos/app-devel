@@ -5,7 +5,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 $app['basename'] = 'devel';
-$app['version'] = '1.5.22';
+$app['version'] = '1.6.2';
 $app['release'] = '1';
 $app['vendor'] = 'ClearFoundation';
 $app['packager'] = 'ClearFoundation';
@@ -37,6 +37,7 @@ $app['controllers']['translations']['title'] = lang('devel_translations');
 $app['core_requires'] = array(
     'app-base-core >= 1:1.2.8',
     'app-language-core',
+    'app-tasks-core',
     'bc',
     'clearos-framework >= 6.5.4',
     'php-common',

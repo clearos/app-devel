@@ -1,7 +1,7 @@
 
 Name: app-devel
 Epoch: 1
-Version: 1.5.22
+Version: 1.6.2
 Release: 1%{dist}
 Summary: Developer Tools
 License: GPLv3
@@ -21,6 +21,7 @@ Group: ClearOS/Libraries
 Requires: app-base-core
 Requires: app-base-core >= 1:1.2.8
 Requires: app-language-core
+Requires: app-tasks-core
 Requires: bc
 Requires: clearos-framework >= 6.5.4
 Requires: php-common
