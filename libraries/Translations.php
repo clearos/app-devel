@@ -228,6 +228,6 @@ class Translations extends Engine
         clearos_profile(__METHOD__, __LINE__);
 
         if (!clearos_is_valid_boolean($state))
-            return lang('base_validate_state_invalid');
+            return lang('base_state_invalid');
     }
 }
