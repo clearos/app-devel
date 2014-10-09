@@ -364,26 +364,8 @@ echo "<br><br>";
 echo "
 <h2>Dialog Box</h2>
 <p>A dialog box is used to display a single question to the end user.</p>
+<p>TODO</p>
 ";
-
-echo anchor_dialog('dialog_box_anchor', 'Click Here to Open a Dialog');
-echo anchor_dialog('warning_dialog_box_anchor', 'Click Here to Open a Warning');
-
-// Note...the DOM id of the message box must follow the id of the anchor_button + "_message"
-echo "
-<div id='dialog_box_anchor_message' title='My Dialog Title'>
-    <p>This is the default dialog which is useful for displaying information. 
-    The dialog window can be moved, resized and closed with the 'x' icon.</p>
-</div>
-";
-/*
-// Similarly, a complementary call needs to be made in javascript
-dialog_critical()
-dialog_warning()
-dialog_highlight()
-dialog_custom()
-
-*/
 
 ///////////////////////////////////////////////////////////////////////////////
 // Loading icon
