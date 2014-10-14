@@ -87,10 +87,6 @@ echo field_button_set( array(
     form_submit_update('submit'),
     anchor_cancel('/dhcp'),
 ));
-echo field_button_set( array(
-    form_submit_custom('submit', 'Custom'),
-    anchor_cancel('/dhcp'),
-));
 
 echo form_footer();
 echo form_close();
@@ -349,13 +345,12 @@ echo "
 <p>The following info boxes are used to display short informationation messages.</p>
 ";
 
-echo infobox_warning("Warning", "This is a warning.");
+echo "<br clear='all'>";
 echo infobox_highlight("Info", "This is some bit of information worth highlighting.");
-
 echo "<br clear='all'>";
 echo infobox_warning("Warning", "This is a warning.");
 echo "<br clear='all'>";
-echo infobox_highlight("Info", "This is some bit of information worth highlighting.");
+echo infobox_critical("Error", "This is a fatal error.");
 
 ///////////////////////////////////////////////////////////////////////////////
 // Dialog Box

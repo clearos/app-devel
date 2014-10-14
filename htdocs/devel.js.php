@@ -1,3 +1,6 @@
+<?php
+  header('Content-Type: text/javascript; charset=UTF-8');
+?>
 $(document).ready(function() {
 
     // Dialog Box
@@ -14,6 +17,7 @@ $(document).ready(function() {
 	});
 
     // Dialog box
+    /*
 	$('#dialog_box_message').dialog({
         autoOpen: false,
 		buttons: {
@@ -25,6 +29,7 @@ $(document).ready(function() {
 			} 
 		}
 	});
+    */
 
     // Progress Bar Demo
     //------------------
@@ -50,8 +55,8 @@ function getData() {
 }
 
 function showData(info) {
-    $("#bacon_progress").animate_progressbar(info.progress);
-    $("#bacon_progress_standalone").animate_progressbar(info.progress);
+    $("#bacon_progress").css('width', info.progress + '%').attr('aria-valuenow', info.progress);
+    $("#bacon_progress_standalone").css('width', info.progress + '%').attr('aria-valuenow', info.progress);
 }
 
 // vim: ts=4 syntax=javascript
