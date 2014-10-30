@@ -15,6 +15,9 @@ $(document).ready(function() {
 	$('#warning_dialog_box_anchor').click(function() {
         clearos_dialog_box('error', 'Warning','This is a Javascript warning dialog pop-up.');
 	});
+	$('#modal-info-box-demo-trigger').click(function() {
+        clearos_modal_infobox_open('modal-info-box-demo');
+    });
 
     // Dialog box
     /*

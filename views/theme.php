@@ -92,6 +92,53 @@ echo form_footer();
 echo form_close();
 
 ///////////////////////////////////////////////////////////////////////////////
+// Containers
+///////////////////////////////////////////////////////////////////////////////
+
+echo "<h2>Layout & Containers</h2>";
+echo "<p>Grid/Columns</p>";
+for ($r = 1; $r <= 3; $r++) {
+    echo row_open();
+    for ($c = 1; $c <= 4; $c++) {
+        echo column_open(3);
+        echo "<div style='text-align: center; border: #000 1px dotted; margin: 5px;'> $r x $c</div>";
+        echo column_close();
+    }
+    echo row_close();
+}
+
+echo "<p>Simple Box</p>";
+echo box_open("Simple Box");
+echo box_content("Using box_content() function for simple/short content.");
+echo box_close();
+
+echo "<p>Box with Complex Content</p>";
+echo box_open("Simple Box - complex content");
+echo box_content_open();
+echo "<div>Using box_content_open()/close() to add more complex content (eg. widgets)</div>";
+echo "<div style='float: left;'>" . image('placeholder.svg', array('size' => '50x50')) . "</div>";
+echo "<div style='float: left;'>" . image('placeholder.svg', array('size' => '50x50')) . "</div>";
+echo "<div style='float: left;'>" . image('placeholder.svg', array('size' => '50x50')) . "</div>";
+echo "<div style='float: left;'>" . image('placeholder.svg', array('size' => '50x50')) . "</div>";
+echo "<div style='float: left;'>" . image('placeholder.svg', array('size' => '50x50')) . "</div>";
+echo "<div style='float: left;'>" . image('placeholder.svg', array('size' => '50x50')) . "</div>";
+echo "<div class='clearfix'></div>";
+echo box_content_close();
+echo box_close();
+
+echo "<p>Box with Footer</p>";
+echo box_open("Box - with footer");
+echo box_content("Along with content, uses box_footer() function to add action button etc.");
+echo box_footer(NULL, anchor_configure('#'));
+echo box_close();
+
+echo "<p>Box Loading Content</p>";
+echo box_open("Box - with footer");
+echo box_content("Along with content, uses box_footer() function to add action button etc.");
+echo box_footer(NULL, anchor_configure('#'), array('loading' => TRUE));
+echo box_close();
+
+///////////////////////////////////////////////////////////////////////////////
 // Buttons and Anchors
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -355,12 +402,27 @@ echo infobox_critical("Error", "This is a fatal error.");
 ///////////////////////////////////////////////////////////////////////////////
 // Dialog Box
 ///////////////////////////////////////////////////////////////////////////////
-echo "<br><br>";
+
+echo "<br>";
 echo "
 <h2>Dialog Box</h2>
 <p>A dialog box is used to display a single question to the end user.</p>
-<p>TODO</p>
 ";
+echo theme_dialogbox_confirm('Are you sure you want to do this?', '#', '#');
+
+echo "
+<p>A dialog box is used to display a single question to the end user.</p>
+";
+echo theme_dialogbox_confirm_delete('Are you sure you want delete this?', array('Some identier'), '#', '#');
+
+///////////////////////////////////////////////////////////////////////////////
+// Dialog Box
+///////////////////////////////////////////////////////////////////////////////
+
+echo "<h2>Modal Info Box</h2>";
+
+echo modal_info('modal-info-box-demo', 'Some Title', 'Hello...this is a modal info box.');
+echo anchor_custom('#', 'Open Dialog', 'high', array('id' => 'modal-info-box-demo-trigger'));
 
 ///////////////////////////////////////////////////////////////////////////////
 // Loading icon
@@ -370,9 +432,28 @@ echo "
 <h2>Loading Icon</h2>
 <p>An icon/image to denote that an action is in progress.</p>
 ";
-
 echo loading();
+echo "<BR>";
 
+echo "<p>Loading with size override of 2em.</p>";
+echo loading('2em');
+echo "<BR>";
+
+echo "<p>Loading with text.</p>";
+echo loading(NULL, lang('base_loading...'));
+echo "<BR>";
+
+echo "<p>Loading with center alignment in container.</p>";
+echo loading(NULL, lang('base_loading...'), array('center' => TRUE));
+echo "<BR>";
+
+echo "<p>Loading with icon above (and centered in container).</p>";
+echo loading(NULL, lang('base_loading...'), array('center' => TRUE, 'icon-above' => TRUE));
+echo "<BR>";
+
+echo "<p>Loading with icon below (and centered in container).</p>";
+echo loading(NULL, lang('base_loading...'), array('center' => TRUE, 'icon-below' => TRUE));
+echo "<BR>";
 ///////////////////////////////////////////////////////////////////////////////
 // Progress Bar
 ///////////////////////////////////////////////////////////////////////////////
