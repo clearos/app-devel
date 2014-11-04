@@ -316,7 +316,7 @@ echo field_checkbox('checkbox2', '0', 'Juice');
 echo field_checkbox('checkbox3', '0', 'French Fries');
 echo field_textarea('feedback', '', 'Feedback');
 echo field_dropdown('dropdown', array(0 => 'Coke', 1 => 'Pepsi'), 0, 'Drink');
-echo field_color('color', 'FFFFFF', 'Color', FALSE);
+echo field_color('color', '#f40000', 'Color', FALSE);
 echo fieldset_footer();
 
 echo form_footer();
