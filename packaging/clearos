@@ -57,6 +57,7 @@ $actions = array(
     'reload' => 'Reloads a development environment configuration',
     'setup' => 'Preps a development environment',
     'spec' => 'Generates the RPM spec file for an app',
+    'tag' => 'Provides output for tagging and build system'
 );
 
 $help_output  = '
@@ -97,6 +98,8 @@ if ($action === 'usage') {
     setup();
 } else if ($action === 'spec') {
     spec();
+} else if ($action === 'tag') {
+    tag();
 } else if ($legacy_action === 'deps') {
     deps($legacy_param);
 } else {
@@ -1465,6 +1468,52 @@ exit \$RETVAL
 
         echo "Generated init file: $init_file\n";
     }
+}
+
+/**
+ * Provides tags for build system.
+ *
+ * @category  Framework
+ * @package   Builder
+ * @author    ClearFoundation <developer@clearfoundation.com>
+ * @copyright 2014 ClearFoundation
+ * @license   http://www.gnu.org/copyleft/lgpl.html GNU General Public License version 3 or later
+ * @link      http://www.clearfoundation.com/docs/developer/framework/
+ */
+
+function tag()
+{
+    // Get implied dist tag
+    //---------------------
+
+    $product = preg_split("/\\n/", file_get_contents('/etc/product'));
+
+    foreach ($product as $line) {
+        $matches = array();
+        if (preg_match('/^base_version = (.*)/', $line, $matches)) {
+            $dist = 'v' . $matches[1];
+            $target = 'clearos' . $matches[1];
+        }
+    }
+
+    // Build tag from metadata
+    //------------------------
+
+    $metadata = getcwd() . '/deploy/info.php';
+
+    $app = _load_metadata();
+
+    $basename = "app-" . preg_replace('/-/', '_', $app['basename']);
+    $version = preg_replace('/\./', '_', $app['version']);
+    $release = preg_replace('/\./', '_', $app['release']) . '_' . $dist;
+
+    $tag = $basename . '-' . $version . '-' . $release;
+
+    echo "Build helper\n";
+    echo "------------\n";
+    echo "git tag $tag\n";
+    echo "git push origin $tag\n";
+    echo "plague-client build $basename $tag $target\n";
 }
 
 /**
