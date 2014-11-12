@@ -1503,7 +1503,7 @@ function tag()
 
     $app = _load_metadata();
 
-    $basename = "app-" . preg_replace('/-/', '_', $app['basename']);
+    $basename = "app-" . preg_replace('/_/', '-', $app['basename']);
     $version = preg_replace('/\./', '_', $app['version']);
     $release = preg_replace('/\./', '_', $app['release']) . '_' . $dist;
 
