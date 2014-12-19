@@ -1486,15 +1486,12 @@ function tag()
     // Get implied dist tag
     //---------------------
 
-    $product = preg_split("/\\n/", file_get_contents('/etc/product'));
+    $release = file_get_contents('/etc/clearos-release');
+    $osinfo = explode(" release ", $release);
+    $base_version = trim(preg_replace('/\..*/', '', $osinfo[1]));
 
-    foreach ($product as $line) {
-        $matches = array();
-        if (preg_match('/^base_version = (.*)/', $line, $matches)) {
-            $dist = 'v' . $matches[1];
-            $target = 'clearos' . $matches[1];
-        }
-    }
+    $dist = 'v' . $base_version;
+    $target = 'clearos' . $base_version;
 
     // Build tag from metadata
     //------------------------

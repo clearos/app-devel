@@ -1,7 +1,7 @@
 
 Name: app-devel
 Epoch: 1
-Version: 2.0.5
+Version: 2.0.8
 Release: 1%{dist}
 Summary: Developer Tools
 License: GPLv3
@@ -19,7 +19,7 @@ Summary: Developer Tools - Core
 License: LGPLv3
 Group: ClearOS/Libraries
 Requires: app-base-core
-Requires: app-base-core >= 1:1.2.8
+Requires: app-base-core >= 1:2.0.8
 Requires: app-language-core
 Requires: app-tasks-core
 Requires: bc

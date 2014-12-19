@@ -5,7 +5,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 $app['basename'] = 'devel';
-$app['version'] = '2.0.5';
+$app['version'] = '2.0.8';
 $app['release'] = '1';
 $app['vendor'] = 'ClearFoundation';
 $app['packager'] = 'ClearFoundation';
@@ -35,7 +35,7 @@ $app['controllers']['translations']['title'] = lang('devel_translations');
 /////////////////////////////////////////////////////////////////////////////
 
 $app['core_requires'] = array(
-    'app-base-core >= 1:1.2.8',
+    'app-base-core >= 1:2.0.8',
     'app-language-core',
     'app-tasks-core',
     'bc',
