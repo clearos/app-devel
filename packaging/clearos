@@ -1209,6 +1209,9 @@ function spec()
     if (file_exists(getcwd() . '/README.md')) {
         $include_docs = "%doc README.md\n";
         $move_docs = "rm -f %{buildroot}/usr/clearos/apps/{$app['basename']}/README.md";
+    } else if (file_exists(getcwd() . '/readme.md')) {
+        $include_docs = "%doc readme.md\n";
+        $move_docs = "rm -f %{buildroot}/usr/clearos/apps/{$app['basename']}/readme.md";
     } else {
         $include_docs = '';
         $move_docs = '';
