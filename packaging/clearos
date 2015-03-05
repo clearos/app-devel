@@ -1022,6 +1022,7 @@ function spec()
     $core_directories_install = '';
     $core_files_manifest = '';
     $core_files_install = '';
+    $core_symlinks = '';
     $htdocs_symlinks = '';
     $services_manifest = '';
     $services_install = '';
@@ -1067,6 +1068,14 @@ function spec()
 
             $core_directories_manifest .= '%dir ' . $attributes . $directory . "\n";
             $core_directories_install .= 'install -d -m ' . $mode . ' %{buildroot}' . $directory . "\n";
+        }
+    }
+
+    if (isset($app['core_symlinks'])) {
+        ksort($app['core_symlinks']);
+        foreach ($app['core_symlinks'] as $target => $symlink) {
+            $core_symlinks .= 'ln -s ' . $target . ' %{buildroot}' . $symlink . "\n";
+            $core_files_manifest .=  $symlink . "\n";
         }
     }
 
@@ -1258,7 +1267,7 @@ This package provides the core API and libraries.
 mkdir -p -m 755 %{buildroot}/usr/clearos/apps/{$app['basename']}
 cp -r * %{buildroot}/usr/clearos/apps/{$app['basename']}/
 $move_docs
-$core_directories_install$core_files_install$core_zendguard$services_install$htdocs_symlinks$core_preinstall
+$core_directories_install$core_files_install$core_zendguard$services_install$htdocs_symlinks$core_symlinks$core_preinstall
 %post
 logger -p local6.notice -t installer '{$app['package_name']} - installing'
 
@@ -1333,7 +1342,7 @@ This package provides the core API and libraries.
 mkdir -p -m 755 %{buildroot}/usr/clearos/apps/{$app['basename']}
 cp -r * %{buildroot}/usr/clearos/apps/{$app['basename']}/
 $move_docs
-$core_directories_install$core_files_install$core_zendguard$services_install$core_preinstall
+$core_directories_install$core_files_install$core_zendguard$services_install$core_symlinks$core_preinstall
 %post core
 logger -p local6.notice -t installer '{$app['package_name']}-core - installing'
 

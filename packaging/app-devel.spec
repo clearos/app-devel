@@ -1,7 +1,7 @@
 
 Name: app-devel
 Epoch: 1
-Version: 2.0.18
+Version: 2.0.19
 Release: 1%{dist}
 Summary: Developer Tools
 License: GPLv3
