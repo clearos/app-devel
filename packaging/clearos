@@ -901,8 +901,8 @@ Listen 1501
     SetEnv CLEAROS_CONFIG /home/$username/.clearos
 
     # For framework development only
-    # DocumentRoot /home/$username/clearos/webconfig/framework/trunk/htdocs
-    # SetEnv CLEAROS_BOOTSTRAP /home/$username/clearos/webconfig/framework/trunk/shared
+    # DocumentRoot /home/$username/clearos/webconfig/framework/htdocs
+    # SetEnv CLEAROS_BOOTSTRAP /home/$username/clearos/webconfig/framework/shared
 
     # Enable SSL
     SSLEngine on
@@ -979,7 +979,7 @@ Listen 1501
         $environment .= "export EDITOR\n";
         $environment .= "\n";
         $environment .= "# For framework development only\n";
-        $environment .= "# CLEAROS_BOOTSTRAP=/home/$username/clearos/webconfig/framework/trunk/shared\n"; 
+        $environment .= "# CLEAROS_BOOTSTRAP=/home/$username/clearos/webconfig/framework/shared\n";
         $environment .= "# export CLEAROS_BOOTSTRAP\n";
         file_put_contents("/home/$username/.bash_profile", $environment, FILE_APPEND);
     }
