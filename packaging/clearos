@@ -978,6 +978,9 @@ Listen 1501
         $environment .= "EDITOR=$editor\n";
         $environment .= "export EDITOR\n";
         $environment .= "\n";
+        $environment .= "OPENSSL_ENABLE_MD5_VERIFY=1\n";
+        $environment .= "export OPENSSL_ENABLE_MD5_VERIFY\n";
+        $environment .= "\n";
         $environment .= "# For framework development only\n";
         $environment .= "# CLEAROS_BOOTSTRAP=/home/$username/clearos/webconfig/framework/shared\n";
         $environment .= "# export CLEAROS_BOOTSTRAP\n";
