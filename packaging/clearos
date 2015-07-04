@@ -1030,6 +1030,8 @@ function spec()
     $services_manifest = '';
     $services_install = '';
     $services_init = array();
+    $custom_event_types_register = '';
+    $custom_event_types_deregister = '';
 
     if (isset($app['core_file_manifest'])) {
         ksort($app['core_file_manifest']);
@@ -1115,6 +1117,24 @@ function spec()
         }
     }
 
+    // Custom event types
+    //-------------------
+
+    if (isset($app['event_types'])) {
+        ksort($app['event_types']);
+        foreach ($app['event_types'] as $tag) {
+            $custom_event_types_register .= "    /usr/bin/eventsctl -R --type $tag --basename {$app['package_name']}\n";
+            $custom_event_types_deregister .= "    /usr/bin/eventsctl -D --type $tag\n";
+        }
+
+	if (strlen($custom_event_types_register)) {
+		$custom_event_types_register = "if [ -x /usr/bin/eventsctl -a -S /var/lib/csplugin-events/eventsctl.socket ]; then\n$custom_event_types_register\nfi\n";
+	}
+	if (strlen($custom_event_types_deregister)) {
+		$custom_event_types_deregister = "if [ -x /usr/bin/eventsctl -a -S /var/lib/csplugin-events/eventsctl.socket ]; then\n$custom_event_types_deregister\nfi\n";
+	}
+    }
+
     // Zend Guard
     //-----------
 
@@ -1180,6 +1200,10 @@ function spec()
     if (isset($app['core_requires'])) {
         foreach ($app['core_requires'] as $require)
             $core_requires .= "Requires: $require\n";
+    }
+
+    if (isset($app['event_types']) && count($app['event_types']) > 0) {
+        $core_requires .= "Requires: csplugin-events\n";
     }
 
     // Packager and Vendor
@@ -1283,6 +1307,8 @@ fi
 
 [ -x /usr/clearos/apps/{$app['basename']}/deploy/upgrade ] && /usr/clearos/apps/{$app['basename']}/deploy/upgrade
 
+$custom_event_types_register
+
 exit 0
 
 %preun
@@ -1295,6 +1321,8 @@ if [ $1 -eq 0 ]; then
     logger -p local6.notice -t installer '{$app['package_name']}-core - uninstalling'
     [ -x /usr/clearos/apps/{$app['basename']}/deploy/uninstall ] && /usr/clearos/apps/{$app['basename']}/deploy/uninstall
 fi
+
+$custom_event_types_deregister
 
 exit 0
 
