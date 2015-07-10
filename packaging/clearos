@@ -1123,7 +1123,7 @@ function spec()
     if (isset($app['event_types'])) {
         ksort($app['event_types']);
         foreach ($app['event_types'] as $tag) {
-            $custom_event_types_register .= "    /usr/bin/eventsctl -R --type $tag --basename {$app['package_name']}\n";
+            $custom_event_types_register .= "    /usr/bin/eventsctl -R --type $tag --basename {$app['basename']}\n";
             $custom_event_types_deregister .= "    /usr/bin/eventsctl -D --type $tag\n";
         }
 

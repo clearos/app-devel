@@ -1,7 +1,7 @@
 
 Name: app-devel
 Epoch: 1
-Version: 2.1.6
+Version: 2.1.7
 Release: 1%{dist}
 Summary: Developer Tools
 License: GPLv3
@@ -27,6 +27,7 @@ Requires: clearos-framework >= 6.5.4
 Requires: php-common
 Requires: rsync
 Requires: wget
+Requires: csplugin-events
 
 %description core
 This page provides a quick developer overview of the theme and other widgets.
@@ -57,6 +58,14 @@ fi
 
 [ -x /usr/clearos/apps/devel/deploy/upgrade ] && /usr/clearos/apps/devel/deploy/upgrade
 
+if [ -x /usr/bin/eventsctl -a -S /var/lib/csplugin-events/eventsctl.socket ]; then
+    /usr/bin/eventsctl -R --type DEVEL_MODE_APP --basename devel
+    /usr/bin/eventsctl -R --type DEVEL_MODE_FRAME --basename devel
+    /usr/bin/eventsctl -R --type DEVEL_MODE_THEME --basename devel
+
+fi
+
+
 exit 0
 
 %preun
@@ -69,6 +78,14 @@ if [ $1 -eq 0 ]; then
     logger -p local6.notice -t installer 'app-devel-core - uninstalling'
     [ -x /usr/clearos/apps/devel/deploy/uninstall ] && /usr/clearos/apps/devel/deploy/uninstall
 fi
+
+if [ -x /usr/bin/eventsctl -a -S /var/lib/csplugin-events/eventsctl.socket ]; then
+    /usr/bin/eventsctl -D --type DEVEL_MODE_APP
+    /usr/bin/eventsctl -D --type DEVEL_MODE_FRAME
+    /usr/bin/eventsctl -D --type DEVEL_MODE_THEME
+
+fi
+
 
 exit 0
 
