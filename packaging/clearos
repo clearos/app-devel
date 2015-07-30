@@ -1306,9 +1306,7 @@ if [ $1 -eq 1 ]; then
 fi
 
 [ -x /usr/clearos/apps/{$app['basename']}/deploy/upgrade ] && /usr/clearos/apps/{$app['basename']}/deploy/upgrade
-
 $custom_event_types_register
-
 exit 0
 
 %preun
@@ -1321,9 +1319,7 @@ if [ $1 -eq 0 ]; then
     logger -p local6.notice -t installer '{$app['package_name']}-core - uninstalling'
     [ -x /usr/clearos/apps/{$app['basename']}/deploy/uninstall ] && /usr/clearos/apps/{$app['basename']}/deploy/uninstall
 fi
-
 $custom_event_types_deregister
-
 exit 0
 
 %files
