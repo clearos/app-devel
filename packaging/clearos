@@ -252,7 +252,7 @@ function deps($filename = NULL)
                 $root_exception = TRUE;
             else
                 $detected_classes[] = $matches[1];
-	    }
+        }
 
         if (preg_match('/\s*([a-zA-Z0-9_]*)::\w+/', $line, $matches)) {
             // Ignore parent::xyz and self::xyz
@@ -315,7 +315,7 @@ function deps($filename = NULL)
 
     // Add special \Exception
     if ($root_exception)
-	$exception_use_output = "use \Exception as Exception;\n" . $exception_use_output;
+        $exception_use_output = "use \Exception as Exception;\n" . $exception_use_output;
 
 echo "
 ///////////////////////////////////////////////////////////////////////////////
@@ -1123,17 +1123,27 @@ function spec()
 
     if (isset($app['event_types'])) {
         ksort($app['event_types']);
+        $types_register = '';
+        $types_deregister = '';
         foreach ($app['event_types'] as $tag) {
-            $custom_event_types_register .= "    /usr/bin/eventsctl -R --type $tag --basename {$app['basename']}\n";
-            $custom_event_types_deregister .= "    /usr/bin/eventsctl -D --type $tag\n";
+            $types_register   .= "    /usr/bin/eventsctl -R --type $tag --basename {$app['basename']}\n";
+            $types_deregister .= "    /usr/bin/eventsctl -D --type $tag\n";
         }
 
-	if (strlen($custom_event_types_register)) {
-		$custom_event_types_register = "if [ -x /usr/bin/eventsctl -a -S /var/lib/csplugin-events/eventsctl.socket ]; then\n$custom_event_types_register\nfi\n";
-	}
-	if (strlen($custom_event_types_deregister)) {
-		$custom_event_types_deregister = "if [ -x /usr/bin/eventsctl -a -S /var/lib/csplugin-events/eventsctl.socket ]; then\n$custom_event_types_deregister\nfi\n";
-	}
+        if (strlen($types_register)) {
+            $custom_event_types_register  = "\nif [ -x /usr/bin/eventsctl -a -S /var/lib/csplugin-events/eventsctl.socket ]; ";
+            $custom_event_types_register .= "then\n{$types_register}else\n";
+            $custom_event_types_register .= "    logger -p local6.notice -t installer '{$app['package_name']} - ";
+            $custom_event_types_register .= "events system not running, unable to register custom types.'\n";
+            $custom_event_types_register .= "fi\n";
+        }
+        if (strlen($types_deregister)) {
+            $custom_event_types_deregister  = "\nif [ -x /usr/bin/eventsctl -a -S /var/lib/csplugin-events/eventsctl.socket ]; ";
+            $custom_event_types_deregister .= "then\n{$types_deregister}else\n";
+            $custom_event_types_deregister .= "    logger -p local6.notice -t installer '{$app['package_name']} - ";
+            $custom_event_types_deregister .= "events system not running, unable to unregister custom types.'\n";
+            $custom_event_types_deregister .= "fi\n";
+        }
     }
 
     // Zend Guard
@@ -1214,12 +1224,12 @@ function spec()
     if (($app['vendor'] == 'ClearCenter') || ($app['vendor'] == 'ClearFoundation'))
         $vendor = '';
     else
-	$vendor = "Vendor: {$app['vendor']}\n";
+        $vendor = "Vendor: {$app['vendor']}\n";
 
     if (($app['packager'] == 'ClearCenter') || ($app['packager'] == 'ClearFoundation'))
         $packager = '';
     else
-	$packager = "Packager: {$app['packager']}\n";
+        $packager = "Packager: {$app['packager']}\n";
 
     // Pre-install scripts
     //--------------------

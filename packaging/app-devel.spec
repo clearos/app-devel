@@ -2,7 +2,7 @@
 Name: app-devel
 Epoch: 1
 Version: 2.1.20
-Release: 1%{dist}
+Release: 2%{dist}
 Summary: Developer Tools
 License: GPLv3
 Group: ClearOS/Apps
@@ -57,11 +57,13 @@ if [ $1 -eq 1 ]; then
 fi
 
 [ -x /usr/clearos/apps/devel/deploy/upgrade ] && /usr/clearos/apps/devel/deploy/upgrade
+
 if [ -x /usr/bin/eventsctl -a -S /var/lib/csplugin-events/eventsctl.socket ]; then
     /usr/bin/eventsctl -R --type DEVEL_MODE_APP --basename devel
     /usr/bin/eventsctl -R --type DEVEL_MODE_FRAME --basename devel
     /usr/bin/eventsctl -R --type DEVEL_MODE_THEME --basename devel
-
+else
+    logger -p local6.notice -t installer 'app-devel - events system not running, unable to register custom types.'
 fi
 
 exit 0
@@ -76,11 +78,13 @@ if [ $1 -eq 0 ]; then
     logger -p local6.notice -t installer 'app-devel-core - uninstalling'
     [ -x /usr/clearos/apps/devel/deploy/uninstall ] && /usr/clearos/apps/devel/deploy/uninstall
 fi
+
 if [ -x /usr/bin/eventsctl -a -S /var/lib/csplugin-events/eventsctl.socket ]; then
     /usr/bin/eventsctl -D --type DEVEL_MODE_APP
     /usr/bin/eventsctl -D --type DEVEL_MODE_FRAME
     /usr/bin/eventsctl -D --type DEVEL_MODE_THEME
-
+else
+    logger -p local6.notice -t installer 'app-devel - events system not running, unable to unregister custom types.'
 fi
 
 exit 0
