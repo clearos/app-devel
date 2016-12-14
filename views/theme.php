@@ -324,7 +324,7 @@ echo form_close();
 
 
 echo "
-<p>In other cases, a bunch of checboxes might be put in a set: FIXME: need a good example</p>";
+<p>In other cases, a bunch of checboxes might be put in a set.</p>";
 
 /*
 $checkboxes = array(
@@ -374,8 +374,6 @@ echo form_dropdown('city', $cities);
 ///////////////////////////////////////////////////////////////////////////////
 // Help Box
 ///////////////////////////////////////////////////////////////////////////////
-
-echo "<br><br>"; // FIXME: remove when theme is fixed
 
 echo "
 <h2>Help Box</h2>
