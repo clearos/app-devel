@@ -180,7 +180,7 @@ function deps($filename = NULL)
     $factory_mapping = array();
 
     foreach (Config::get_apps_paths() as $path) {
-        $path = (preg_match('/apps$/', $path)) ? $path : $path . '/apps'; // FIXME: temporary workaround for old version
+        $path = (preg_match('/apps$/', $path)) ? $path : $path . '/apps'; // temporary workaround for old version
         echo "loading $path...\n";
 
         exec("find $path -type f -name '*.php' | grep -v tags | grep '/libraries/' ", $output);
@@ -803,7 +803,6 @@ $deny_perms
 
     file_put_contents('/tmp/devel-paths.conf', $configlet);
 
-    // FIXME: remove sudo and use API instead
     system('/usr/bin/sudo /bin/mv /tmp/devel-paths.conf /usr/clearos/sandbox/etc/httpd/conf.d');
     system('/usr/bin/sudo /sbin/service webconfig restart');
 }
