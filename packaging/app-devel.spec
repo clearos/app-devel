@@ -1,8 +1,8 @@
 
 Name: app-devel
 Epoch: 1
-Version: 2.3.0
-Release: 2%{dist}
+Version: 2.3.2
+Release: 1%{dist}
 Summary: Developer Tools
 License: GPLv3
 Group: ClearOS/Apps
@@ -98,6 +98,7 @@ exit 0
 %files core
 %defattr(-,root,root)
 %exclude /usr/clearos/apps/devel/packaging
+%exclude /usr/clearos/apps/devel/unify.json
 %dir /usr/clearos/apps/devel
 %dir /etc/clearos/devel.d
 /usr/clearos/apps/devel/deploy
