@@ -420,7 +420,7 @@ echo theme_dialogbox_confirm_delete('Are you sure you want delete this?', array(
 
 echo "<h2>Modal Info Box</h2>";
 
-echo modal_info('modal-info-box-demo', 'Some Title', 'Hello...this is a modal info box.');
+echo modal_info('modal-info-box-demo', 'Some Title', 'Hello... this is a modal info box.');
 echo anchor_custom('#', 'Open Dialog', 'high', array('id' => 'modal-info-box-demo-trigger'));
 
 ///////////////////////////////////////////////////////////////////////////////
