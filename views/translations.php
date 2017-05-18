@@ -64,7 +64,6 @@ echo form_open('devel/translations/edit');
 echo form_header("Translations");
 
 echo field_dropdown('code', $languages, $code, lang('language_default_system_language'), $read_only);
-echo field_toggle_enable_disable('mode', $mode, lang('devel_translation_mode'), $read_only);
 echo field_toggle_enable_disable('sync', $sync, lang('devel_synchronize_updates'), $read_only);
 echo field_button_set($buttons);
 
