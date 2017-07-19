@@ -1289,6 +1289,7 @@ $include_controllers$include_htdocs$include_views
 %files core
 %defattr(-,root,root)
 $include_docs%exclude /usr/clearos/apps/{$app['basename']}/packaging
+$include_docs%exclude /usr/clearos/apps/{$app['basename']}/unify.json
 %dir /usr/clearos/apps/{$app['basename']}
 " . $core_directories_manifest . "/usr/clearos/apps/{$app['basename']}/deploy
 /usr/clearos/apps/{$app['basename']}/language
@@ -1353,6 +1354,7 @@ exit 0
 %files core
 %defattr(-,root,root)
 $include_docs%exclude /usr/clearos/apps/{$app['basename']}/packaging
+$include_docs%exclude /usr/clearos/apps/{$app['basename']}/unify.json
 %dir /usr/clearos/apps/{$app['basename']}
 " . $core_directories_manifest . "/usr/clearos/apps/{$app['basename']}/deploy
 /usr/clearos/apps/{$app['basename']}/language
