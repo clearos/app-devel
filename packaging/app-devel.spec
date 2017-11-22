@@ -1,7 +1,7 @@
 
 Name: app-devel
 Epoch: 1
-Version: 2.3.5
+Version: 2.4.0
 Release: 1%{dist}
 Summary: Developer Tools
 License: GPLv3
@@ -23,7 +23,7 @@ Requires: app-base-core >= 1:2.3.4
 Requires: app-language-core
 Requires: app-tasks-core
 Requires: bc
-Requires: clearos-framework >= 6.5.4
+Requires: clearos-framework >= 7.3.9
 Requires: php-common
 Requires: rsync
 Requires: wget

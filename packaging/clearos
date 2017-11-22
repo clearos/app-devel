@@ -273,6 +273,8 @@ function deps($filename = NULL)
     $factory_load = array();
     $exception_use = array();
     $exception_load = array();
+    $full_path = array();
+    $no_mapping = array();
 
     foreach ($detected_classes as $class) {
         if (isset($factory_mapping[$class])) {
@@ -280,11 +282,14 @@ function deps($filename = NULL)
             $use = "use \\clearos\\apps\\$namespace\\${class}_Factory as $class;";
             $load = "clearos_load_library('$namespace/${class}_Factory');";
             $is_factory = TRUE;
-        } else {
+        } else if (array_key_exists($class, $class_mapping)) {
             $namespace = $class_mapping[$class];
             $use = "use \\clearos\\apps\\$namespace\\$class as $class;";
             $load = "clearos_load_library('$namespace/$class');";
             $is_factory = FALSE;
+        } else {
+            $no_mapping[] = $class;
+            continue;
         }
 
         if ($is_factory) {
@@ -316,6 +321,20 @@ function deps($filename = NULL)
     // Add special \Exception
     if ($root_exception)
         $exception_use_output = "use \Exception as Exception;\n" . $exception_use_output;
+
+    if (!empty($no_mapping)) {
+        sort($no_mapping);
+echo "
+No mappings found for:
+ - ";
+
+echo implode("\n - ", $no_mapping);
+
+echo "
+
+-------------------------------------------------------------------------------
+";
+    }
 
 echo "
 ///////////////////////////////////////////////////////////////////////////////
