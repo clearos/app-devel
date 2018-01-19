@@ -935,6 +935,7 @@ Listen 1501
     RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK)
     RewriteRule .* - [F]
     RewriteRule ^/app/(.*)$ /app/index.php/$1 [L]
+    RewriteRule ^/api/(.*)$ /app/index.php/$1 [L]
 
     # Aliases
     Alias /cache/ /var/clearos/framework/cache/
@@ -1262,6 +1263,7 @@ function spec()
     // File manifest
     //--------------
 
+    $include_api = (file_exists('api')) ? "/usr/clearos/apps/{$app['basename']}/api\n" : '';
     $include_controllers = (file_exists('controllers')) ? "/usr/clearos/apps/{$app['basename']}/controllers\n" : '';
     $include_libraries = (file_exists('libraries')) ? "/usr/clearos/apps/{$app['basename']}/libraries\n" : '';
     $include_tests = (file_exists('tests')) ? "/usr/clearos/apps/{$app['basename']}/tests\n" : '';
@@ -1361,7 +1363,7 @@ $include_docs%exclude /usr/clearos/apps/{$app['basename']}/unify.json
 %dir /usr/clearos/apps/{$app['basename']}
 " . $core_directories_manifest . "/usr/clearos/apps/{$app['basename']}/deploy
 /usr/clearos/apps/{$app['basename']}/language
-$include_libraries$include_tests$core_files_manifest$services_manifest";
+$include_api$include_libraries$include_tests$core_files_manifest$services_manifest";
 
 
 // Template for core RPMS
@@ -1426,7 +1428,7 @@ $include_docs%exclude /usr/clearos/apps/{$app['basename']}/unify.json
 %dir /usr/clearos/apps/{$app['basename']}
 " . $core_directories_manifest . "/usr/clearos/apps/{$app['basename']}/deploy
 /usr/clearos/apps/{$app['basename']}/language
-$include_libraries$include_tests$core_files_manifest$services_manifest";
+$include_api$include_libraries$include_tests$core_files_manifest$services_manifest";
 }
 
 
