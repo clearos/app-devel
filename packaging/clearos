@@ -1074,8 +1074,13 @@ function spec()
             else
                 $attributes = "%attr($mode,$owner,$group) ";
 
-            $core_files_manifest .= $attributes . $config . $details['target'] . "\n";
-            $core_files_install .= 'install -D -m ' . $mode . ' packaging/' . $file . ' %{buildroot}' . $details['target'] . "\n";
+            if (!is_array($details['target']))
+                $details['target'] = [ $details['target'] ];
+
+            foreach ($details['target'] as $target) {
+                $core_files_manifest .= $attributes . $config . $target . "\n";
+                $core_files_install .= 'install -D -m ' . $mode . ' packaging/' . $file . ' %{buildroot}' . $target . "\n";
+            }
         }
     }
 
