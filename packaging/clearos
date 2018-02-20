@@ -212,6 +212,7 @@ function deps($filename = NULL)
     //-------------------------------------------
 
     $detected_classes = array();
+    $namespaced_classes = array();
     $root_exception = FALSE;
 
     $raw_contents = file_get_contents($source_file);
@@ -228,6 +229,11 @@ function deps($filename = NULL)
         // Ignore ClearOS_Controller
         } else if (preg_match('/extends.*ClearOS_Controller/', $line)) {
             // echo test
+
+        // Ignore full namespaces
+        } else if (preg_match('/\s*=\s*(\\\\clearos\\\\apps.*)/', $line, $matches)) {
+            $namespaced_classes[] = $matches[1];
+            continue;
 
         // Ignore Zend
         } else if (preg_match('/\\\Zend/', $line)) {
@@ -321,6 +327,19 @@ function deps($filename = NULL)
     // Add special \Exception
     if ($root_exception)
         $exception_use_output = "use \Exception as Exception;\n" . $exception_use_output;
+
+    if (!empty($namespaced_classes)) {
+        sort($namespaced_classes);
+echo "
+Full namespace found:
+ - ";
+
+echo implode("\n - ", $namespaced_classes);
+echo "
+
+-------------------------------------------------------------------------------
+";
+    }
 
     if (!empty($no_mapping)) {
         sort($no_mapping);
