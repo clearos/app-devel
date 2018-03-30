@@ -1332,7 +1332,7 @@ Buildarch: noarch
 {$app['description']}
 
 %package core
-Summary: {$app['name']} - Core
+Summary: {$app['name']} - API
 License: {$app['license_core']}
 Group: ClearOS/Libraries
 " . $core_provides . $core_requires . $core_obsoletes . "
@@ -1399,7 +1399,7 @@ Name: {$app['package_name']}
 Epoch: 1
 Version: {$app['version']}
 Release: {$app['release']}%{dist}
-Summary: {$app['name']} - Core
+Summary: {$app['name']} - API
 License: {$app['license_core']}
 Group: ClearOS/Libraries
 " . $packager . $vendor . 
@@ -1410,7 +1410,7 @@ Buildarch: noarch
 {$app['description']}
 
 %package core
-Summary: {$app['name']} - Core
+Summary: {$app['name']} - API
 " . $core_provides . $core_requires . $core_obsoletes . "
 %description core
 {$app['description']}
