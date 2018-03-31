@@ -1,11 +1,11 @@
 
 Name: app-devel
 Epoch: 1
-Version: 2.4.8
+Version: 2.4.10
 Release: 1%{dist}
 Summary: Developer Tools
 License: GPLv3
-Group: ClearOS/Apps
+Group: Applications/Apps
 Source: %{name}-%{version}.tar.gz
 Buildarch: noarch
 Requires: %{name}-core = 1:%{version}-%{release}
@@ -15,9 +15,9 @@ Requires: app-base
 This page provides a quick developer overview of the theme and other widgets.
 
 %package core
-Summary: Developer Tools - Core
+Summary: Developer Tools - API
 License: LGPLv3
-Group: ClearOS/Libraries
+Group: Applications/API
 Requires: app-base-core
 Requires: app-base-core >= 1:2.3.4
 Requires: app-language-core
