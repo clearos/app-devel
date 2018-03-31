@@ -1321,7 +1321,7 @@ Version: {$app['version']}
 Release: {$app['release']}%{dist}
 Summary: {$app['name']}
 License: {$app['license']}
-Group: ClearOS/Apps
+Group: Applications/Apps
 " . $packager . $vendor . 
 "Source: %{name}-%{version}.tar.gz
 Buildarch: noarch
@@ -1334,7 +1334,7 @@ Buildarch: noarch
 %package core
 Summary: {$app['name']} - API
 License: {$app['license_core']}
-Group: ClearOS/Libraries
+Group: Applications/API
 " . $core_provides . $core_requires . $core_obsoletes . "
 %description core
 {$app['description']}
@@ -1401,7 +1401,7 @@ Version: {$app['version']}
 Release: {$app['release']}%{dist}
 Summary: {$app['name']} - API
 License: {$app['license_core']}
-Group: ClearOS/Libraries
+Group: Applications/API
 " . $packager . $vendor . 
 "Source: {$app['package_name']}-%{version}.tar.gz
 Buildarch: noarch
