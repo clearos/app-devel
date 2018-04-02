@@ -1051,6 +1051,24 @@ function spec()
 
     $app = _load_metadata();
 
+    // Bail if vendor or packager are missing
+    //---------------------------------------
+
+    $bail = FALSE;
+
+    if (empty($app['packager'])) {
+        echo "Packager is required\n";
+        $bail = TRUE;
+    }
+
+    if (empty($app['vendor'])) {
+        echo "Vendor is required\n";
+        $bail = TRUE;
+    }
+
+    if ($bail)
+        exit(1);
+
     // RPM-ize the values (e.g. change underscores to dashes)
     //-------------------------------------------------------
 
@@ -1264,15 +1282,8 @@ function spec()
     //--------------------
     // Build system manages these tags
 
-    if (($app['vendor'] == 'ClearCenter') || ($app['vendor'] == 'ClearFoundation'))
-        $vendor = '';
-    else
-        $vendor = "Vendor: {$app['vendor']}\n";
-
-    if (($app['packager'] == 'ClearCenter') || ($app['packager'] == 'ClearFoundation'))
-        $packager = '';
-    else
-        $packager = "Packager: {$app['packager']}\n";
+    $vendor = "Vendor: {$app['vendor']}\n";
+    $packager = "Packager: {$app['packager']}\n";
 
     // Pre-install scripts
     //--------------------

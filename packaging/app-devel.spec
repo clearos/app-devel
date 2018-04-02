@@ -1,11 +1,13 @@
 
 Name: app-devel
 Epoch: 1
-Version: 2.4.10
+Version: 2.4.11
 Release: 1%{dist}
 Summary: Developer Tools
 License: GPLv3
 Group: Applications/Apps
+Packager: ClearFoundation
+Vendor: ClearFoundation
 Source: %{name}-%{version}.tar.gz
 Buildarch: noarch
 Requires: %{name}-core = 1:%{version}-%{release}
